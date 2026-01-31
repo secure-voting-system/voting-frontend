@@ -30,9 +30,3 @@ jobs:
 
       - name: Build
         run: npm run build
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: build-${{ matrix.node-version }}
-          path: dist/

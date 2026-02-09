@@ -146,7 +146,7 @@ const VoterDashboard = () => {
                 <p style={{ color: 'var(--danger)' }}>Receipt not found</p>
               ) : (
                 <div>
-                  <p style={{ color: 'var(--success)', fontWeight: 600 }}>✓ Vote Verified</p>
+                  <p style={{ color: 'var(--success)', fontWeight: 600 }}>Vote Verified</p>
                   <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '0.5rem' }}>
                     Receipt ID: {searchResult.receiptId}<br />
                     Timestamp: {new Date(searchResult.timestamp).toLocaleString()}

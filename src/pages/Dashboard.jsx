@@ -1,67 +1,60 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import React from 'react';
+import { Users, Vote, Activity, Server, ArrowUpRight } from 'lucide-react';
 
-function Dashboard() {
-  const [user, setUser] = useState(null);
-  const [stats, setStats] = useState(null);
-  const navigate = useNavigate();
+const StatCard = ({ title, value, icon: Icon, color, trend }) => (
+  <div className="card animate-fade-in">
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+      <div style={{ padding: '0.6rem', borderRadius: '0.75rem', background: `rgba(${color}, 0.1)`, color: `rgb(${color})` }}>
+        <Icon size={20} />
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', fontWeight: 700, color: '#10b981' }}>
+        {trend} <ArrowUpRight size={14} />
+      </div>
+    </div>
+    <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.25rem' }}>{title}</p>
+    <div className="stat-glow">{value}</div>
+  </div>
+);
 
-  useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      setUser(JSON.parse(userData));
-    }
-
-    fetchStats();
-  }, []);
-
-  const fetchStats = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/users/stats`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setStats(response.data);
-    } catch (err) {
-      console.error('Failed to fetch stats:', err);
-    }
-  };
-
+const Dashboard = () => {
   return (
-    <div>
-      <h1>Dashboard</h1>
-      {user && (
-        <div style={{ marginBottom: '30px' }}>
-          <h2>Welcome, {user.name}!</h2>
-          <p>Role: {user.role}</p>
-          <p>Voter ID: {user.voterId}</p>
-        </div>
-      )}
+    <div style={{ maxWidth: '1200px' }}>
+      <header style={{ marginBottom: '2.5rem' }}>
+        <h1>Network Dashboard</h1>
+        <p style={{ color: 'var(--text-muted)', marginTop: '-2rem' }}>Comprehensive overview of decentralized voting nodes</p>
+      </header>
+      
+      <div className="grid-cols-4">
+        <StatCard title="Active Elections" value="03" icon={Vote} color="79, 70, 229" trend="+2" />
+        <StatCard title="Total Voters" value="12,458" icon={Users} color="16, 185, 129" trend="+1.2k" />
+        <StatCard title="Participation" value="68.4%" icon={Activity} color="14, 165, 233" trend="+5.4%" />
+        <StatCard title="Nodes Online" value="Active" icon={Server} color="139, 92, 246" trend="100%" />
+      </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
-        <div style={{ padding: '20px', background: 'white', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-          <h3>Cast Vote</h3>
-          <p>Participate in active elections</p>
-          <button onClick={() => navigate('/cast-vote')}>Vote Now</button>
-        </div>
-
-        <div style={{ padding: '20px', background: 'white', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-          <h3>View Results</h3>
-          <p>See election results</p>
-          <button onClick={() => navigate('/results')}>View Results</button>
-        </div>
-
-        {stats && (
-          <div style={{ padding: '20px', background: 'white', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-            <h3>Statistics</h3>
-            <p>Total Votes: {stats.totalVotes || 0}</p>
-            <p>Active Elections: {stats.activeElections || 0}</p>
+      <div style={{ marginTop: '2rem' }} className="grid-cols-2">
+        <div className="card" style={{ height: '380px', display: 'flex', flexDirection: 'column' }}>
+          <h2>Live Voting Activity</h2>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', borderRadius: '0.75rem', border: '1px dashed var(--border)' }}>
+            <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Synchronizing participation data...</span>
           </div>
-        )}
+        </div>
+        
+        <div className="card">
+          <h2>Administrative Tasks</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <button className="btn-premium" style={{ width: '100%', justifyContent: 'center' }}>Issue New Election</button>
+            <div style={{ padding: '1rem', border: '1px solid var(--border)', borderRadius: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <p style={{ fontWeight: 600, fontSize: '0.9rem' }}>Voter Verification</p>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>14 pending requests</p>
+              </div>
+              <button style={{ color: 'var(--primary)', fontWeight: 700, fontSize: '0.8rem', border: 'none', background: 'none', cursor: 'pointer' }}>View All</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
-}
+};
 
 export default Dashboard;

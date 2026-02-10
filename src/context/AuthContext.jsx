@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { authAPI } from '../services/api';
 
 const AuthContext = createContext();
@@ -16,7 +16,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('vortex_current_user');
+    const storedUser = localStorage.getItem('current_user');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
@@ -25,9 +25,9 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const data = await authAPI.login(email, password);
+      const data = await authAPI.login({ email, password });
       localStorage.setItem('auth_token', data.token);
-      localStorage.setItem('vortex_current_user', JSON.stringify(data.user));
+      localStorage.setItem('current_user', JSON.stringify(data.user));
       setUser(data.user);
       return { success: true, user: data.user };
     } catch (error) {
@@ -37,15 +37,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = async ({ name, email, password, voterId, role, adminSecret }) => {
     try {
-      const payload = {
-        name,
-        email,
-        password,
-        voterId,
-        role,
-        adminSecret,
-      };
-      await authAPI.register(payload);
+      await authAPI.register({ name, email, password, voterId, role, adminSecret });
       return await login(email, password);
     } catch (error) {
       return { success: false, error: error.response?.data?.message || 'Registration failed' };
@@ -55,10 +47,10 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     setUser(null);
     localStorage.removeItem('auth_token');
-    localStorage.removeItem('vortex_current_user');
+    localStorage.removeItem('current_user');
   };
 
-  const value = {
+  const value = useMemo(() => ({
     user,
     loading,
     login,
@@ -66,8 +58,10 @@ export const AuthProvider = ({ children }) => {
     logout,
     isAuthenticated: !!user,
     isAdmin: user?.role?.toUpperCase() === 'ADMIN',
-    isVoter: user?.role?.toUpperCase() === 'VOTER'
-  };
+    isAuthority: user?.role?.toUpperCase() === 'AUTHORITY',
+    isAuditor: user?.role?.toUpperCase() === 'AUDITOR',
+    isVoter: user?.role?.toUpperCase() === 'VOTER',
+  }), [user, loading]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

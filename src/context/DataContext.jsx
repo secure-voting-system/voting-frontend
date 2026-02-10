@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { API_BASE_URL, candidateAPI, electionAPI, resultAPI, voteAPI } from '../services/api';
+import { API_BASE_URL, candidatesAPI, electionsAPI, resultsAPI, votesAPI } from '../services/api';
 
 const DataContext = createContext();
 
@@ -33,7 +33,7 @@ export const DataProvider = ({ children }) => {
   });
 
   const loadElections = useCallback(async () => {
-    const data = await electionAPI.getAll();
+    const data = await electionsAPI.list();
     const normalized = Array.isArray(data) ? data.map(normalizeElection) : data.elections?.map(normalizeElection) || [];
     setElections(normalized);
     return normalized;
@@ -172,37 +172,37 @@ export const DataProvider = ({ children }) => {
       startTime: electionData.startTime,
       endTime: electionData.endTime,
     };
-    const created = await electionAPI.create(payload);
+    const created = await electionsAPI.create(payload);
     await loadElections();
     return created;
   };
 
   const startElection = async (electionId) => {
-    const result = await electionAPI.start(electionId);
+    const result = await electionsAPI.start(electionId);
     await loadElections();
     return result;
   };
 
   const closeElection = async (electionId) => {
-    const result = await electionAPI.close(electionId);
+    const result = await electionsAPI.close(electionId);
     await loadElections();
     return result;
   };
 
   const suspendElection = async (electionId, reason) => {
-    const result = await electionAPI.suspend(electionId, reason);
+    const result = await electionsAPI.suspend(electionId, reason);
     await loadElections();
     return result;
   };
 
   const resumeElection = async (electionId) => {
-    const result = await electionAPI.resume(electionId);
+    const result = await electionsAPI.resume(electionId);
     await loadElections();
     return result;
   };
 
   const amendElection = async (electionId, field, value, reason) => {
-    const result = await electionAPI.update(electionId, { field, value, reason });
+    const result = await electionsAPI.update(electionId, { field, value, reason });
     await loadElections();
     return result;
   };
@@ -211,7 +211,7 @@ export const DataProvider = ({ children }) => {
     if (candidatesByElection[electionId]) {
       return candidatesByElection[electionId];
     }
-    const candidates = await candidateAPI.getByElection(electionId);
+    const candidates = await candidatesAPI.list(electionId);
     const formatted = Array.isArray(candidates) ? candidates : [];
     setCandidatesByElection((prev) => ({ ...prev, [electionId]: formatted }));
     return formatted;
@@ -223,7 +223,7 @@ export const DataProvider = ({ children }) => {
       name: candidateData.name,
       party: candidateData.party,
     };
-    const result = await candidateAPI.create(candidateData.electionId, payload);
+    const result = await candidatesAPI.create(candidateData.electionId, payload);
     setCandidatesByElection((prev) => ({
       ...prev,
       [candidateData.electionId]: undefined,
@@ -233,7 +233,7 @@ export const DataProvider = ({ children }) => {
   };
 
   const submitVote = async (electionId, candidateId) => {
-    const response = await voteAPI.submit(electionId, candidateId);
+    const response = await votesAPI.cast({ electionId, candidateId });
     const receipt = response.receipt || response;
     setLastReceipt(receipt);
     localStorage.setItem('vortex_last_receipt', JSON.stringify(receipt));
@@ -241,19 +241,19 @@ export const DataProvider = ({ children }) => {
   };
 
   const verifyReceipt = async (receiptId) => {
-    const response = await voteAPI.verifyReceipt(receiptId);
+    const response = await votesAPI.verify(receiptId);
     return response.receipt || response;
   };
 
   const hasUserVoted = async (electionId) => {
-    const response = await voteAPI.hasVoted(electionId);
+    const response = await votesAPI.status(electionId);
     const result = Boolean(response?.hasVoted);
     setHasVotedMap((prev) => ({ ...prev, [electionId]: result }));
     return result;
   };
 
   const getResults = async (electionId) => {
-    return resultAPI.getByElection(electionId);
+    return resultsAPI.byElection(electionId);
   };
 
   const value = {

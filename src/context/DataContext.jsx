@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { candidateAPI, electionAPI, resultAPI, voteAPI } from '../services/api';
+import { API_BASE_URL, candidateAPI, electionAPI, resultAPI, voteAPI } from '../services/api';
 
 const DataContext = createContext();
 
@@ -41,6 +41,122 @@ export const DataProvider = ({ children }) => {
   useEffect(() => {
     loadElections().catch(() => setElections([]));
   }, [loadElections]);
+
+  useEffect(() => {
+    const baseUrl = API_BASE_URL.replace(/\/api$/, '');
+    const eventsUrl = `${baseUrl}/api/events`;
+    const eventSource = new EventSource(eventsUrl);
+
+    const handleElectionUpdate = (electionId, updates) => {
+      setElections((prev) =>
+        prev.map((election) =>
+          election.id === electionId ? { ...election, ...updates } : election
+        )
+      );
+    };
+
+    eventSource.addEventListener('ElectionCreated', (event) => {
+      try {
+        const payload = JSON.parse(event.data);
+        if (!payload?.electionId) {
+          return;
+        }
+        setElections((prev) => {
+          const exists = prev.some((election) => election.id === payload.electionId);
+          if (exists) {
+            return prev;
+          }
+          return [
+            {
+              id: payload.electionId,
+              name: payload.name || 'New Election',
+              description: payload.description || '',
+              status: payload.status || 'pending',
+              startTime: payload.startTime || 0,
+              endTime: payload.endTime || 0,
+              totalVotes: 0,
+              suspended: false,
+            },
+            ...prev,
+          ];
+        });
+      } catch (error) {
+        // ignore parsing errors
+      }
+    });
+
+    eventSource.addEventListener('ElectionStarted', (event) => {
+      try {
+        const payload = JSON.parse(event.data);
+        if (payload?.electionId) {
+          handleElectionUpdate(payload.electionId, { status: 'active' });
+        }
+      } catch (error) {
+        // ignore parsing errors
+      }
+    });
+
+    eventSource.addEventListener('ElectionEnded', (event) => {
+      try {
+        const payload = JSON.parse(event.data);
+        if (payload?.electionId) {
+          handleElectionUpdate(payload.electionId, {
+            status: 'closed',
+            totalVotes: payload.totalVotes ?? 0,
+          });
+        }
+      } catch (error) {
+        // ignore parsing errors
+      }
+    });
+
+    eventSource.addEventListener('ElectionSuspended', (event) => {
+      try {
+        const payload = JSON.parse(event.data);
+        if (payload?.electionId) {
+          handleElectionUpdate(payload.electionId, { status: 'suspended', suspended: true });
+        }
+      } catch (error) {
+        // ignore parsing errors
+      }
+    });
+
+    eventSource.addEventListener('ElectionResumed', (event) => {
+      try {
+        const payload = JSON.parse(event.data);
+        if (payload?.electionId) {
+          handleElectionUpdate(payload.electionId, { status: 'active', suspended: false });
+        }
+      } catch (error) {
+        // ignore parsing errors
+      }
+    });
+
+    eventSource.addEventListener('VoteCast', (event) => {
+      try {
+        const payload = JSON.parse(event.data);
+        if (payload?.electionId) {
+          setElections((prev) =>
+            prev.map((election) =>
+              election.id === payload.electionId
+                ? { ...election, totalVotes: (election.totalVotes || 0) + 1 }
+                : election
+            )
+          );
+        }
+      } catch (error) {
+        // ignore parsing errors
+      }
+    });
+
+    eventSource.addEventListener('error', () => {
+      eventSource.close();
+    });
+
+    return () => {
+      eventSource.close();
+    };
+  }, []);
 
   const createElection = async (electionData) => {
     const payload = {

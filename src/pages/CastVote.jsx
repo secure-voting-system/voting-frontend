@@ -1,109 +1,76 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { useData } from '../context/DataContext';
 
-function CastVote() {
-  const [elections, setElections] = useState([]);
-  const [selectedElection, setSelectedElection] = useState('');
+const CastVote = () => {
+  const { electionId } = useParams();
+  const { elections, getCandidatesByElection, submitVote, hasUserVoted, hasVotedMap } = useData();
+  const [candidates, setCandidates] = useState([]);
   const [selectedCandidate, setSelectedCandidate] = useState('');
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
+  const [status, setStatus] = useState({ loading: false, error: '', success: '' });
+
+  const election = elections.find((item) => item.id === electionId);
+  const alreadyVoted = Boolean(hasVotedMap[electionId]);
 
   useEffect(() => {
-    fetchElections();
-  }, []);
+    if (!electionId) {
+      return;
+    }
+    getCandidatesByElection(electionId)
+      .then((data) => setCandidates(data))
+      .catch(() => setCandidates([]));
+    hasUserVoted(electionId).catch(() => null);
+  }, [electionId, getCandidatesByElection, hasUserVoted]);
 
-  const fetchElections = async () => {
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (!selectedCandidate) {
+      return;
+    }
+    setStatus({ loading: true, error: '', success: '' });
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/votes/elections`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setElections(response.data);
-    } catch (err) {
-      setError('Failed to fetch elections');
+      const receipt = await submitVote(electionId, selectedCandidate);
+      await hasUserVoted(electionId);
+      setStatus({ loading: false, error: '', success: `Vote recorded. Receipt: ${receipt.receiptId || 'N/A'}` });
+    } catch (error) {
+      setStatus({ loading: false, error: error.response?.data?.message || 'Failed to cast vote.', success: '' });
     }
   };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setMessage('');
-    setError('');
-
-    try {
-      const token = localStorage.getItem('token');
-      await axios.post(
-        `${import.meta.env.VITE_API_URL}/votes/cast`,
-        {
-          electionId: selectedElection,
-          candidateId: selectedCandidate,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      setMessage('Vote cast successfully!');
-      setSelectedElection('');
-      setSelectedCandidate('');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to cast vote');
-    }
-  };
-
-  const currentElection = elections.find((e) => e.id === selectedElection);
 
   return (
-    <div style={{ maxWidth: '600px', margin: '50px auto' }}>
-      <h1>Cast Your Vote</h1>
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label>Select Election</label>
-          <select
-            value={selectedElection}
-            onChange={(e) => setSelectedElection(e.target.value)}
-            required
-            style={{ width: '100%', padding: '10px', fontSize: '16px' }}
-          >
-            <option value="">-- Select Election --</option>
-            {elections.map((election) => (
-              <option key={election.id} value={election.id}>
-                {election.name}
+    <div className="stack">
+      <div className="card stack">
+        <h3>Cast vote</h3>
+        <p className="helper">Select a candidate for the chosen election.</p>
+        {election ? (
+          <div className="badge success">{election.name}</div>
+        ) : (
+          <div className="badge warning">Election not found</div>
+        )}
+      </div>
+
+      <form className="card stack" onSubmit={handleSubmit}>
+        <div className="field">
+          <label>Candidate</label>
+          <select value={selectedCandidate} onChange={(event) => setSelectedCandidate(event.target.value)} disabled={alreadyVoted}>
+            <option value="">Select a candidate</option>
+            {candidates.map((candidate) => (
+              <option key={candidate.candidateId || candidate.id} value={candidate.candidateId || candidate.id}>
+                {candidate.name} {candidate.party ? `- ${candidate.party}` : ''}
               </option>
             ))}
           </select>
         </div>
-
-        {currentElection && (
-          <div className="form-group">
-            <label>Select Candidate</label>
-            <select
-              value={selectedCandidate}
-              onChange={(e) => setSelectedCandidate(e.target.value)}
-              required
-              style={{ width: '100%', padding: '10px', fontSize: '16px' }}
-            >
-              <option value="">-- Select Candidate --</option>
-              {currentElection.candidates?.map((candidate) => (
-                <option key={candidate.id} value={candidate.id}>
-                  {candidate.name} - {candidate.party}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        {message && <div style={{ color: 'green', marginBottom: '10px' }}>{message}</div>}
-        {error && <div style={{ color: 'red', marginBottom: '10px' }}>{error}</div>}
-
-        <button type="submit" disabled={!selectedElection || !selectedCandidate}>
-          Cast Vote
+        {alreadyVoted && <div className="badge warning">You have already voted in this election.</div>}
+        {status.error && <div className="badge danger">{status.error}</div>}
+        {status.success && <div className="badge success">{status.success}</div>}
+        <button className="button" type="submit" disabled={!selectedCandidate || alreadyVoted || status.loading}>
+          {status.loading ? 'Submitting...' : 'Submit vote'}
         </button>
+        <Link className="button secondary" to="/voter/verify">Verify receipt</Link>
       </form>
-
-      <div style={{ marginTop: '30px', padding: '20px', background: '#fff3cd', borderRadius: '4px' }}>
-        <strong>Important:</strong> Your vote is anonymous and cannot be changed once submitted.
-      </div>
     </div>
   );
-}
+};
 
 export default CastVote;

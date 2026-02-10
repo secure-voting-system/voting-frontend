@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useData } from '../context/DataContext';
 import ThemeToggle from './ThemeToggle';
 import { 
   LayoutDashboard, 
@@ -13,6 +14,7 @@ import {
 
 const AdminLayout = ({ children }) => {
   const { logout } = useAuth();
+  const { sseConnected } = useData();
   const navigate = useNavigate();
 
   const links = [
@@ -34,7 +36,22 @@ const AdminLayout = ({ children }) => {
         <div style={{ padding: '0 1rem', marginBottom: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800, letterSpacing: '-0.03em', background: 'linear-gradient(to right, var(--primary), var(--accent))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>BHARAT VOTE</h2>
-            <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.2em', fontWeight: 600 }}>Democratic Platform</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem' }}>
+              <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.2em', fontWeight: 600 }}>Democratic Platform</span>
+              <span style={{
+                fontSize: '0.6rem',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.15em',
+                color: sseConnected ? 'var(--success)' : 'var(--warning)',
+                background: sseConnected ? 'rgba(16, 185, 129, 0.12)' : 'rgba(245, 158, 11, 0.12)',
+                border: `1px solid ${sseConnected ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`,
+                padding: '0.15rem 0.4rem',
+                borderRadius: '999px'
+              }}>
+                {sseConnected ? 'Live' : 'Offline'}
+              </span>
+            </div>
           </div>
           <ThemeToggle />
         </div>

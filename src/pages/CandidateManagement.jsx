@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useData } from '../context/DataContext';
-import { UserPlus, Image as ImageIcon, Trash2, GripVertical, CheckCircle2, X } from 'lucide-react';
+import { UserPlus, GripVertical, CheckCircle2, X } from 'lucide-react';
 
-const CandidateCard = ({ candidate, onDelete }) => (
+const CandidateCard = ({ candidate }) => (
   <div className="card glass animate-fade-in" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', padding: '1.25rem' }}>
     <GripVertical size={20} style={{ color: 'var(--text-secondary)', cursor: 'grab' }} />
     <div style={{ 
@@ -16,64 +16,59 @@ const CandidateCard = ({ candidate, onDelete }) => (
       border: '1px solid var(--glass-border)',
       boxShadow: 'inset 0 0 10px rgba(0,0,0,0.2)'
     }}>
-      {candidate.photo ? (
-        <img src={candidate.photo} alt={candidate.name} style={{ width: '100%', height: '100%', borderRadius: '1rem', objectFit: 'cover' }} />
-      ) : (
-        <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary)' }}>
-          {candidate.name.charAt(0)}
-        </span>
-      )}
+      <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary)' }}>
+        {candidate.name.charAt(0)}
+      </span>
     </div>
     <div style={{ flex: 1 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.25rem' }}>
         <h4 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>{candidate.name}</h4>
         <CheckCircle2 size={18} color="var(--primary)" style={{ filter: 'drop-shadow(0 0 5px var(--primary-glow))' }} />
       </div>
-      <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{candidate.role}</p>
-      {candidate.bio && (
-        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>{candidate.bio}</p>
-      )}
-    </div>
-    <div style={{ display: 'flex', gap: '0.75rem' }}>
-      <button 
-        onClick={() => onDelete(candidate.id)}
-        style={{ 
-          padding: '0.6rem', 
-          borderRadius: '0.75rem', 
-          border: '1px solid rgba(239, 68, 68, 0.2)', 
-          background: 'rgba(239, 68, 68, 0.1)', 
-          color: 'var(--danger)', 
-          cursor: 'pointer',
-          transition: '0.3s'
-        }}
-      >
-        <Trash2 size={20} />
-      </button>
+      <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{candidate.party || 'Independent'}</p>
+      <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>ID: {candidate.candidateId || candidate.id}</p>
     </div>
   </div>
 );
 
 const CandidateManagement = () => {
-  const { candidates, elections, createCandidate, deleteCandidate } = useData();
+  const { elections, createCandidate, getCandidatesByElection } = useData();
+  const [candidates, setCandidates] = useState([]);
+  const [selectedElectionId, setSelectedElectionId] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
+    candidateId: '',
     name: '',
-    role: '',
-    bio: '',
+    party: '',
     electionId: '',
-    photo: ''
   });
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    const loadCandidates = async () => {
+      if (!selectedElectionId) {
+        setCandidates([]);
+        return;
+      }
+      const data = await getCandidatesByElection(selectedElectionId);
+      setCandidates(data);
+    };
+    loadCandidates();
+  }, [selectedElectionId, getCandidatesByElection]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    createCandidate(formData);
+    const payload = {
+      ...formData,
+      electionId: formData.electionId || selectedElectionId,
+      candidateId: formData.candidateId || `candidate-${Date.now()}`,
+    };
+    await createCandidate(payload);
     setShowModal(false);
     setFormData({
+      candidateId: '',
       name: '',
-      role: '',
-      bio: '',
+      party: '',
       electionId: '',
-      photo: ''
     });
   };
 
@@ -96,6 +91,30 @@ const CandidateManagement = () => {
         </button>
       </div>
 
+      <div style={{ marginBottom: '1.5rem' }}>
+        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.875rem' }}>
+          Filter by Election
+        </label>
+        <select
+          value={selectedElectionId}
+          onChange={(e) => setSelectedElectionId(e.target.value)}
+          style={{
+            width: '100%',
+            padding: '0.875rem',
+            borderRadius: '0.75rem',
+            border: '1px solid var(--glass-border)',
+            background: 'rgba(255,255,255,0.03)',
+            color: 'var(--text-primary)',
+            fontSize: '1rem'
+          }}
+        >
+          <option value="" style={{ background: '#1f2937', color: 'white' }}>Select an election</option>
+          {elections.map(election => (
+            <option key={election.id} value={election.id} style={{ background: '#1f2937', color: 'white' }}>{election.name}</option>
+          ))}
+        </select>
+      </div>
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
         {candidates.length === 0 ? (
           <div className="card glass" style={{ padding: '4rem', textAlign: 'center' }}>
@@ -106,9 +125,8 @@ const CandidateManagement = () => {
         ) : (
           candidates.map((candidate) => (
             <CandidateCard 
-              key={candidate.id} 
+              key={candidate.candidateId || candidate.id} 
               candidate={candidate}
-              onDelete={deleteCandidate}
             />
           ))
         )}
@@ -152,6 +170,28 @@ const CandidateManagement = () => {
             <form onSubmit={handleSubmit}>
               <div style={{ marginBottom: '1.5rem' }}>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.875rem' }}>
+                  Candidate ID (Optional)
+                </label>
+                <input
+                  type="text"
+                  name="candidateId"
+                  value={formData.candidateId}
+                  onChange={handleChange}
+                  placeholder="candidate-001"
+                  style={{
+                    width: '100%',
+                    padding: '0.875rem',
+                    borderRadius: '0.75rem',
+                    border: '1px solid var(--glass-border)',
+                    background: 'rgba(255,255,255,0.03)',
+                    color: 'var(--text-primary)',
+                    fontSize: '1rem'
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.875rem' }}>
                   Candidate Name
                 </label>
                 <input
@@ -175,15 +215,15 @@ const CandidateManagement = () => {
 
               <div style={{ marginBottom: '1.5rem' }}>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.875rem' }}>
-                  Role/Position
+                  Party
                 </label>
                 <input
                   type="text"
-                  name="role"
-                  value={formData.role}
+                  name="party"
+                  value={formData.party}
                   onChange={handleChange}
                   required
-                  placeholder="e.g., President, Vice President"
+                  placeholder="e.g., Progressive Party"
                   style={{
                     width: '100%',
                     padding: '0.875rem',
@@ -202,7 +242,7 @@ const CandidateManagement = () => {
                 </label>
                 <select
                   name="electionId"
-                  value={formData.electionId}
+                  value={formData.electionId || selectedElectionId}
                   onChange={handleChange}
                   required
                   style={{
@@ -217,54 +257,9 @@ const CandidateManagement = () => {
                 >
                   <option value="" style={{ background: '#1f2937', color: 'white' }}>Select an election</option>
                   {elections.map(election => (
-                    <option key={election.id} value={election.id} style={{ background: '#1f2937', color: 'white' }}>{election.title}</option>
+                    <option key={election.id} value={election.id} style={{ background: '#1f2937', color: 'white' }}>{election.name}</option>
                   ))}
                 </select>
-              </div>
-
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.875rem' }}>
-                  Bio (Optional)
-                </label>
-                <textarea
-                  name="bio"
-                  value={formData.bio}
-                  onChange={handleChange}
-                  placeholder="Brief description about the candidate"
-                  rows="3"
-                  style={{
-                    width: '100%',
-                    padding: '0.875rem',
-                    borderRadius: '0.75rem',
-                    border: '1px solid var(--glass-border)',
-                    background: 'rgba(255,255,255,0.03)',
-                    color: 'var(--text-primary)',
-                    fontSize: '1rem',
-                    resize: 'vertical'
-                  }}
-                />
-              </div>
-
-              <div style={{ marginBottom: '2rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.875rem' }}>
-                  Photo URL (Optional)
-                </label>
-                <input
-                  type="url"
-                  name="photo"
-                  value={formData.photo}
-                  onChange={handleChange}
-                  placeholder="https://example.com/photo.jpg"
-                  style={{
-                    width: '100%',
-                    padding: '0.875rem',
-                    borderRadius: '0.75rem',
-                    border: '1px solid var(--glass-border)',
-                    background: 'rgba(255,255,255,0.03)',
-                    color: 'var(--text-primary)',
-                    fontSize: '1rem'
-                  }}
-                />
               </div>
 
               <div style={{ display: 'flex', gap: '1rem' }}>

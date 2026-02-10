@@ -1,82 +1,90 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import { useData } from '../context/DataContext';
 
-function Results() {
-  const [results, setResults] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+const Results = () => {
+  const { elections, getResults, getCandidatesByElection } = useData();
+  const [selectedElectionId, setSelectedElectionId] = useState('');
+  const [tally, setTally] = useState(null);
+  const [candidates, setCandidates] = useState([]);
+  const [status, setStatus] = useState({ loading: false, error: '' });
 
   useEffect(() => {
-    fetchResults();
-  }, []);
-
-  const fetchResults = async () => {
-    try {
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/results`);
-      setResults(response.data);
-      setLoading(false);
-    } catch (err) {
-      setError('Failed to fetch results');
-      setLoading(false);
+    if (!selectedElectionId && elections.length) {
+      setSelectedElectionId(elections[0].id);
     }
-  };
+  }, [elections, selectedElectionId]);
 
-  if (loading) {
-    return <div>Loading results...</div>;
-  }
+  useEffect(() => {
+    if (!selectedElectionId) {
+      return;
+    }
+    setStatus({ loading: true, error: '' });
+    Promise.all([
+      getResults(selectedElectionId),
+      getCandidatesByElection(selectedElectionId),
+    ])
+      .then(([resultsData, candidateData]) => {
+        setTally(resultsData);
+        setCandidates(candidateData || []);
+        setStatus({ loading: false, error: '' });
+      })
+      .catch(() => {
+        setStatus({ loading: false, error: 'Failed to fetch results.' });
+      });
+  }, [selectedElectionId, getResults, getCandidatesByElection]);
 
-  if (error) {
-    return <div style={{ color: 'red' }}>{error}</div>;
-  }
+  const totalVotes = tally?.totalVotes || 0;
 
   return (
-    <div>
-      <h1>Election Results</h1>
-      {results.length === 0 ? (
-        <p>No results available yet.</p>
-      ) : (
-        results.map((election) => (
-          <div
-            key={election.id}
-            style={{
-              marginBottom: '30px',
-              padding: '20px',
-              background: 'white',
-              borderRadius: '8px',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-            }}
-          >
-            <h2>{election.name}</h2>
-            <p>Status: {election.status}</p>
-            <p>Total Votes: {election.totalVotes}</p>
+    <div className="stack">
+      <div className="card stack">
+        <h3>Election results</h3>
+        <div className="field">
+          <label>Select election</label>
+          <select value={selectedElectionId} onChange={(event) => setSelectedElectionId(event.target.value)}>
+            {elections.map((election) => (
+              <option key={election.id} value={election.id}>
+                {election.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        {status.loading && <div className="badge warning">Loading results...</div>}
+        {status.error && <div className="badge danger">{status.error}</div>}
+      </div>
 
-            <table style={{ width: '100%', marginTop: '20px', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ borderBottom: '2px solid #ddd' }}>
-                  <th style={{ padding: '10px', textAlign: 'left' }}>Candidate</th>
-                  <th style={{ padding: '10px', textAlign: 'left' }}>Party</th>
-                  <th style={{ padding: '10px', textAlign: 'right' }}>Votes</th>
-                  <th style={{ padding: '10px', textAlign: 'right' }}>Percentage</th>
-                </tr>
-              </thead>
-              <tbody>
-                {election.candidates?.map((candidate) => (
-                  <tr key={candidate.id} style={{ borderBottom: '1px solid #eee' }}>
-                    <td style={{ padding: '10px' }}>{candidate.name}</td>
-                    <td style={{ padding: '10px' }}>{candidate.party}</td>
-                    <td style={{ padding: '10px', textAlign: 'right' }}>{candidate.votes}</td>
-                    <td style={{ padding: '10px', textAlign: 'right' }}>
-                      {((candidate.votes / election.totalVotes) * 100).toFixed(2)}%
-                    </td>
+      <div className="card stack">
+        <h3>Totals</h3>
+        <p className="helper">Total votes: {totalVotes}</p>
+        <div className="table-wrapper">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Candidate</th>
+                <th>Party</th>
+                <th>Votes</th>
+                <th>Share</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(tally?.candidateVotes || {}).map(([candidateId, votes]) => {
+                const candidate = candidates.find((item) => item.candidateId === candidateId || item.id === candidateId);
+                const percent = totalVotes ? ((votes / totalVotes) * 100).toFixed(2) : '0.00';
+                return (
+                  <tr key={candidateId}>
+                    <td>{candidate?.name || candidateId}</td>
+                    <td>{candidate?.party || 'Independent'}</td>
+                    <td>{votes}</td>
+                    <td>{percent}%</td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ))
-      )}
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
-}
+};
 
 export default Results;

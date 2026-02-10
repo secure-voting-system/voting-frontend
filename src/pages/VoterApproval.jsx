@@ -1,10 +1,9 @@
 import React from 'react';
 import { Check, X, ShieldCheck, Fingerprint, Eye, MoreVertical } from 'lucide-react';
 
-import { useData } from '../context/DataContext';
 
 const VoterApproval = () => {
-  const { pendingVoters, approveVoter, rejectVoter } = useData();
+  const pendingVoters = [];
 
   return (
     <div style={{ maxWidth: '1000px' }}>

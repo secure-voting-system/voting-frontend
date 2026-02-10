@@ -15,6 +15,7 @@ export const DataProvider = ({ children }) => {
   const [elections, setElections] = useState([]);
   const [candidatesByElection, setCandidatesByElection] = useState({});
   const [hasVotedMap, setHasVotedMap] = useState({});
+  const [sseConnected, setSseConnected] = useState(false);
   const [lastReceipt, setLastReceipt] = useState(() => {
     const stored = localStorage.getItem('vortex_last_receipt');
     return stored ? JSON.parse(stored) : null;
@@ -46,6 +47,10 @@ export const DataProvider = ({ children }) => {
     const baseUrl = API_BASE_URL.replace(/\/api$/, '');
     const eventsUrl = `${baseUrl}/api/events`;
     const eventSource = new EventSource(eventsUrl);
+
+    eventSource.onopen = () => {
+      setSseConnected(true);
+    };
 
     const handleElectionUpdate = (electionId, updates) => {
       setElections((prev) =>
@@ -150,10 +155,12 @@ export const DataProvider = ({ children }) => {
     });
 
     eventSource.addEventListener('error', () => {
+      setSseConnected(false);
       eventSource.close();
     });
 
     return () => {
+      setSseConnected(false);
       eventSource.close();
     };
   }, []);
@@ -254,6 +261,7 @@ export const DataProvider = ({ children }) => {
     candidatesByElection,
     lastReceipt,
     hasVotedMap,
+    sseConnected,
     createElection,
     startElection,
     closeElection,

@@ -7,7 +7,7 @@ import { Vote, CheckCircle2, Clock, XCircle, Search, Receipt, LogOut } from 'luc
 
 const VoterDashboard = () => {
   const { user, logout } = useAuth();
-  const { elections, hasUserVoted, hasVotedMap, verifyReceipt, lastReceipt } = useData();
+  const { elections, hasUserVoted, hasVotedMap, verifyReceipt, lastReceipt, sseConnected } = useData();
   const [receiptSearch, setReceiptSearch] = useState('');
   const [searchResult, setSearchResult] = useState(null);
   const [checkingStatus, setCheckingStatus] = useState(false);
@@ -50,6 +50,19 @@ const VoterDashboard = () => {
             <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem' }}>Welcome back, {user.name}!</p>
           </div>
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <span style={{
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+              color: sseConnected ? 'var(--success)' : 'var(--warning)',
+              background: sseConnected ? 'rgba(16, 185, 129, 0.12)' : 'rgba(245, 158, 11, 0.12)',
+              border: `1px solid ${sseConnected ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`,
+              padding: '0.35rem 0.75rem',
+              borderRadius: '999px'
+            }}>
+              {sseConnected ? 'Live Updates' : 'Offline'}
+            </span>
             <ThemeToggle />
             <button onClick={logout} className="sidebar-item" style={{ margin: 0, padding: '0.75rem 1.5rem' }}>
               <LogOut size={20} /> Logout

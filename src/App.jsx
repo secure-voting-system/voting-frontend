@@ -14,6 +14,7 @@ import Register from './pages/Register';
 // Voter Pages
 import VoterDashboard from './pages/VoterDashboard';
 import VotingPage from './pages/VotingPage';
+import Results from './pages/Results';
 
 // Admin Pages
 import Dashboard from './pages/Dashboard';
@@ -48,6 +49,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <VotingPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/results"
+              element={
+                <ProtectedRoute>
+                  <Results />
                 </ProtectedRoute>
               }
             />

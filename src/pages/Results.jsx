@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import { useData } from '../context/DataContext';
 
 function Results() {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const { elections, getResults, getCandidatesByElection } = useData();
 
   useEffect(() => {
     fetchResults();
@@ -12,11 +13,17 @@ function Results() {
 
   const fetchResults = async () => {
     try {
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/results`);
-      setResults(response.data);
-      setLoading(false);
+      const resultsData = await Promise.all(
+        elections.map(async (election) => {
+          const tally = await getResults(election.id);
+          const candidates = await getCandidatesByElection(election.id);
+          return { election, tally, candidates };
+        })
+      );
+      setResults(resultsData);
     } catch (err) {
       setError('Failed to fetch results');
+    } finally {
       setLoading(false);
     }
   };
@@ -35,7 +42,7 @@ function Results() {
       {results.length === 0 ? (
         <p>No results available yet.</p>
       ) : (
-        results.map((election) => (
+        results.map(({ election, tally, candidates }) => (
           <div
             key={election.id}
             style={{
@@ -48,7 +55,7 @@ function Results() {
           >
             <h2>{election.name}</h2>
             <p>Status: {election.status}</p>
-            <p>Total Votes: {election.totalVotes}</p>
+            <p>Total Votes: {tally?.totalVotes ?? 0}</p>
 
             <table style={{ width: '100%', marginTop: '20px', borderCollapse: 'collapse' }}>
               <thead>
@@ -60,16 +67,21 @@ function Results() {
                 </tr>
               </thead>
               <tbody>
-                {election.candidates?.map((candidate) => (
-                  <tr key={candidate.id} style={{ borderBottom: '1px solid #eee' }}>
-                    <td style={{ padding: '10px' }}>{candidate.name}</td>
-                    <td style={{ padding: '10px' }}>{candidate.party}</td>
-                    <td style={{ padding: '10px', textAlign: 'right' }}>{candidate.votes}</td>
-                    <td style={{ padding: '10px', textAlign: 'right' }}>
-                      {((candidate.votes / election.totalVotes) * 100).toFixed(2)}%
-                    </td>
-                  </tr>
-                ))}
+                {Object.entries(tally?.candidateVotes || {}).map(([candidateId, votes]) => {
+                  const candidate = candidates.find((item) => item.candidateId === candidateId);
+                  const totalVotes = tally?.totalVotes || 0;
+                  const percent = totalVotes ? ((votes / totalVotes) * 100).toFixed(2) : '0.00';
+                  return (
+                    <tr key={candidateId} style={{ borderBottom: '1px solid #eee' }}>
+                      <td style={{ padding: '10px' }}>{candidate?.name || candidateId}</td>
+                      <td style={{ padding: '10px' }}>{candidate?.party || 'Independent'}</td>
+                      <td style={{ padding: '10px', textAlign: 'right' }}>{votes}</td>
+                      <td style={{ padding: '10px', textAlign: 'right' }}>
+                        {percent}%
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

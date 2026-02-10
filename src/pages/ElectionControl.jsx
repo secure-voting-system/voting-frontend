@@ -1,5 +1,6 @@
 import React from 'react';
-import { Play, Pause, Square, AlertOctagon, Activity, Radio, Lock, ShieldCheck } from 'lucide-react';
+import { Play, Pause, Square, AlertOctagon, Activity, Lock } from 'lucide-react';
+import { useData } from '../context/DataContext';
 
 const ControlCard = ({ title, icon: Icon, color, desc, danger, onClick }) => (
   <div className="card glass animate-fade-in" style={{ 
@@ -51,6 +52,13 @@ const ControlCard = ({ title, icon: Icon, color, desc, danger, onClick }) => (
 );
 
 const ElectionControl = () => {
+  const { elections, startElection, closeElection, suspendElection, resumeElection } = useData();
+  const activeElection = elections.find((election) => election.status === 'active');
+  const pendingElection = elections.find((election) => election.status === 'pending');
+  const suspendedElection = elections.find((election) => election.status === 'suspended');
+
+  const targetElection = activeElection || pendingElection || suspendedElection;
+
   return (
     <div style={{ maxWidth: '1200px' }}>
       <header style={{ marginBottom: '3.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -69,8 +77,12 @@ const ElectionControl = () => {
           <Lock size={32} />
         </div>
         <div style={{ flex: 1 }}>
-          <h2 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--text-primary)' }}>Active Session: Student Council 2024</h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', fontWeight: 500, marginTop: '0.25rem' }}>Started: 08:34 AM • Node Integrity: 100%</p>
+          <h2 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--text-primary)' }}>
+            {targetElection ? `Active Session: ${targetElection.name}` : 'No Active Session'}
+          </h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', fontWeight: 500, marginTop: '0.25rem' }}>
+            {targetElection ? `Status: ${targetElection.status}` : 'Start an election to activate controls'}
+          </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <Activity size={24} color="var(--primary)" />
@@ -84,29 +96,29 @@ const ElectionControl = () => {
           icon={Play} 
           color="16, 185, 129" 
           desc="Initialize secure voting shards and broadcast access keys to all verified voters."
-          onClick={() => alert('Starting voting session...')}
+          onClick={() => pendingElection && startElection(pendingElection.id)}
         />
         <ControlCard 
           title="Pause Cluster" 
           icon={Pause} 
           color="245, 158, 11" 
           desc="Temporarily suspend protocol submissions to perform elective security maintenance."
-          onClick={() => alert('Pausing cluster...')}
+          onClick={() => activeElection && suspendElection(activeElection.id, 'Maintenance')}
         />
         <ControlCard 
           title="Archive Ballots" 
           icon={Square} 
           color="148, 163, 184" 
           desc="Cease activity and begin the decentralized tallying sequence. Final and irreversible."
-          onClick={() => alert('Archiving ballots...')}
+          onClick={() => activeElection && closeElection(activeElection.id)}
         />
         <ControlCard 
-          title="Emergency Scram" 
+          title="Resume Voting" 
           icon={AlertOctagon} 
           color="239, 68, 68" 
-          desc="Immediate severance of all node links. Purge volatile session keys."
+          desc="Resume a suspended election and restore voting access."
           danger
-          onClick={() => confirm('Are you sure? This will immediately halt all voting!') && alert('Emergency scram initiated!')}
+          onClick={() => suspendedElection && resumeElection(suspendedElection.id)}
         />
       </div>
     </div>

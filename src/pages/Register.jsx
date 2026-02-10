@@ -7,15 +7,17 @@ const Register = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    voterId: '',
     password: '',
     confirmPassword: '',
-    role: 'voter'
+    role: 'VOTER',
+    adminSecret: ''
   });
   const [error, setError] = useState('');
   const { register } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -29,10 +31,17 @@ const Register = () => {
       return;
     }
 
-    const result = register(formData.email, formData.password, formData.name, formData.role);
+    const result = await register({
+      name: formData.name,
+      email: formData.email,
+      password: formData.password,
+      voterId: formData.voterId,
+      role: formData.role,
+      adminSecret: formData.adminSecret || undefined,
+    });
     if (result.success) {
       // Redirect based on role
-      if (result.user.role === 'admin') {
+      if (result.user.role?.toUpperCase() === 'ADMIN') {
         navigate('/admin/dashboard');
       } else {
         navigate('/voter/dashboard');
@@ -129,6 +138,32 @@ const Register = () => {
 
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.875rem' }}>
+              Voter ID
+            </label>
+            <div style={{ position: 'relative' }}>
+              <User size={20} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
+              <input
+                type="text"
+                name="voterId"
+                value={formData.voterId}
+                onChange={handleChange}
+                placeholder="VTR-000123"
+                required
+                style={{
+                  width: '100%',
+                  padding: '0.875rem 1rem 0.875rem 3rem',
+                  borderRadius: '0.75rem',
+                  border: '1px solid var(--glass-border)',
+                  background: 'rgba(255,255,255,0.03)',
+                  color: 'var(--text-primary)',
+                  fontSize: '1rem'
+                }}
+              />
+            </div>
+          </div>
+
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.875rem' }}>
               Password
             </label>
             <div style={{ position: 'relative' }}>
@@ -196,8 +231,8 @@ const Register = () => {
                 <input
                   type="radio"
                   name="role"
-                  value="voter"
-                  checked={formData.role === 'voter'}
+                  value="VOTER"
+                  checked={formData.role === 'VOTER'}
                   onChange={handleChange}
                   style={{ display: 'none' }}
                 />
@@ -221,8 +256,8 @@ const Register = () => {
                 <input
                   type="radio"
                   name="role"
-                  value="admin"
-                  checked={formData.role === 'admin'}
+                  value="ADMIN"
+                  checked={formData.role === 'ADMIN'}
                   onChange={handleChange}
                   style={{ display: 'none' }}
                 />
@@ -236,6 +271,34 @@ const Register = () => {
               </label>
             </div>
           </div>
+
+          {formData.role === 'ADMIN' && (
+            <div style={{ marginBottom: '2rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.875rem' }}>
+                Admin Secret
+              </label>
+              <div style={{ position: 'relative' }}>
+                <Lock size={20} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
+                <input
+                  type="password"
+                  name="adminSecret"
+                  value={formData.adminSecret}
+                  onChange={handleChange}
+                  placeholder="Admin secret"
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '0.875rem 1rem 0.875rem 3rem',
+                    borderRadius: '0.75rem',
+                    border: '1px solid var(--glass-border)',
+                    background: 'rgba(255,255,255,0.03)',
+                    color: 'var(--text-primary)',
+                    fontSize: '1rem'
+                  }}
+                />
+              </div>
+            </div>
+          )}
 
           <button type="submit" className="btn-premium" style={{ width: '100%', justifyContent: 'center', fontSize: '1rem', padding: '1rem' }}>
             <UserPlus size={20} /> Create Account

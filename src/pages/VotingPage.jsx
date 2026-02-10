@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
@@ -13,10 +13,38 @@ const VotingPage = () => {
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [showReceipt, setShowReceipt] = useState(false);
   const [voteReceipt, setVoteReceipt] = useState(null);
+  const [candidates, setCandidates] = useState([]);
+  const [alreadyVoted, setAlreadyVoted] = useState(false);
 
-  const election = elections.find(e => e.id === electionId);
-  const candidates = getCandidatesByElection(electionId);
-  const alreadyVoted = hasUserVoted(user.id, electionId);
+  const election = useMemo(() => elections.find(e => e.id === electionId), [elections, electionId]);
+
+  useEffect(() => {
+    let mounted = true;
+    const loadCandidates = async () => {
+      const data = await getCandidatesByElection(electionId);
+      if (mounted) {
+        setCandidates(data);
+      }
+    };
+    loadCandidates();
+    return () => {
+      mounted = false;
+    };
+  }, [electionId, getCandidatesByElection]);
+
+  useEffect(() => {
+    let mounted = true;
+    const loadStatus = async () => {
+      const voted = await hasUserVoted(electionId);
+      if (mounted) {
+        setAlreadyVoted(voted);
+      }
+    };
+    loadStatus();
+    return () => {
+      mounted = false;
+    };
+  }, [electionId, hasUserVoted]);
 
   if (!election) {
     return (
@@ -31,18 +59,16 @@ const VotingPage = () => {
     );
   }
 
-  const handleSubmitVote = () => {
+  const handleSubmitVote = async () => {
     if (!selectedCandidate) return;
 
-    const result = submitVote(user.id, electionId, selectedCandidate);
-    if (result.success) {
-      setVoteReceipt(result.vote);
-      setShowReceipt(true);
-    }
+    const receipt = await submitVote(electionId, selectedCandidate);
+    setVoteReceipt(receipt);
+    setShowReceipt(true);
   };
 
   if (showReceipt && voteReceipt) {
-    const candidate = candidates.find(c => c.id === voteReceipt.candidateId);
+    const candidate = candidates.find(c => c.candidateId === voteReceipt.candidateId || c.id === voteReceipt.candidateId);
     
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
@@ -79,7 +105,7 @@ const VotingPage = () => {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', textAlign: 'left' }}>
               <div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Election</div>
-                <div style={{ fontWeight: 600 }}>{election.title}</div>
+                <div style={{ fontWeight: 600 }}>{election.name}</div>
               </div>
               <div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Candidate</div>
@@ -87,7 +113,7 @@ const VotingPage = () => {
               </div>
               <div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Timestamp</div>
-                <div style={{ fontWeight: 600 }}>{new Date(voteReceipt.timestamp).toLocaleString()}</div>
+                <div style={{ fontWeight: 600 }}>{voteReceipt.timestamp ? new Date(voteReceipt.timestamp * 1000).toLocaleString() : 'Unavailable'}</div>
               </div>
               <div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Status</div>
@@ -139,18 +165,18 @@ const VotingPage = () => {
 
         {/* Election Header */}
         <div className="card glass animate-fade-in" style={{ marginBottom: '2.5rem', padding: '2rem', borderLeft: '4px solid var(--primary)' }}>
-          <h1 style={{ fontSize: '2rem', marginBottom: '0.75rem' }}>{election.title}</h1>
+          <h1 style={{ fontSize: '2rem', marginBottom: '0.75rem' }}>{election.name}</h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', marginBottom: '1.5rem' }}>
             {election.description}
           </p>
           <div style={{ display: 'flex', gap: '2rem', fontSize: '0.875rem' }}>
             <div>
               <span style={{ color: 'var(--text-secondary)' }}>Ends: </span>
-              <span style={{ fontWeight: 600 }}>{new Date(election.endDate).toLocaleString()}</span>
+              <span style={{ fontWeight: 600 }}>{new Date(election.endTime * 1000).toLocaleString()}</span>
             </div>
             <div>
-              <span style={{ color: 'var(--text-secondary)' }}>Turnout: </span>
-              <span style={{ fontWeight: 600 }}>{Math.round((election.votedCount / election.totalVoters) * 100)}%</span>
+              <span style={{ color: 'var(--text-secondary)' }}>Total Votes: </span>
+              <span style={{ fontWeight: 600 }}>{election.totalVotes}</span>
             </div>
           </div>
         </div>
@@ -160,14 +186,14 @@ const VotingPage = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginBottom: '2.5rem' }}>
           {candidates.map((candidate, index) => (
             <div
-              key={candidate.id}
-              onClick={() => setSelectedCandidate(candidate.id)}
+              key={candidate.candidateId || candidate.id}
+              onClick={() => setSelectedCandidate(candidate.candidateId || candidate.id)}
               className="card glass animate-fade-in"
               style={{
                 padding: '1.5rem',
                 cursor: 'pointer',
-                border: selectedCandidate === candidate.id ? '2px solid var(--primary)' : '1px solid var(--glass-border)',
-                background: selectedCandidate === candidate.id ? 'rgba(99, 102, 241, 0.1)' : 'var(--glass-bg)',
+                border: selectedCandidate === (candidate.candidateId || candidate.id) ? '2px solid var(--primary)' : '1px solid var(--glass-border)',
+                background: selectedCandidate === (candidate.candidateId || candidate.id) ? 'rgba(99, 102, 241, 0.1)' : 'var(--glass-bg)',
                 animationDelay: `${index * 0.1}s`
               }}
             >
@@ -176,13 +202,13 @@ const VotingPage = () => {
                   width: '20px',
                   height: '20px',
                   borderRadius: '50%',
-                  border: `2px solid ${selectedCandidate === candidate.id ? 'var(--primary)' : 'var(--glass-border)'}`,
+                  border: `2px solid ${selectedCandidate === (candidate.candidateId || candidate.id) ? 'var(--primary)' : 'var(--glass-border)'}`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0
                 }}>
-                  {selectedCandidate === candidate.id && (
+                  {selectedCandidate === (candidate.candidateId || candidate.id) && (
                     <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'var(--primary)' }}></div>
                   )}
                 </div>
@@ -209,13 +235,10 @@ const VotingPage = () => {
 
                 <div style={{ flex: 1 }}>
                   <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.25rem' }}>{candidate.name}</h3>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>{candidate.role}</p>
-                  {candidate.bio && (
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', lineHeight: 1.5 }}>{candidate.bio}</p>
-                  )}
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>{candidate.party || 'Independent'}</p>
                 </div>
 
-                {selectedCandidate === candidate.id && (
+                {selectedCandidate === (candidate.candidateId || candidate.id) && (
                   <CheckCircle2 size={32} color="var(--primary)" />
                 )}
               </div>

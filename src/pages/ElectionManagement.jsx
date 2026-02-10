@@ -1,28 +1,31 @@
 import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
-import { Plus, Calendar, Clock, Edit3, Trash2, Search, X } from 'lucide-react';
+import { Plus, Calendar, Clock, Play, Square, PauseCircle, Search, X } from 'lucide-react';
 
 const ElectionManagement = () => {
-  const { elections, createElection, deleteElection } = useData();
+  const { elections, createElection, startElection, closeElection, suspendElection, resumeElection } = useData();
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
-    title: '',
+    name: '',
     description: '',
-    startDate: '',
-    endDate: '',
-    totalVoters: 100
+    startTime: '',
+    endTime: ''
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    createElection(formData);
+    await createElection({
+      name: formData.name,
+      description: formData.description,
+      startTime: new Date(formData.startTime).toISOString(),
+      endTime: new Date(formData.endTime).toISOString(),
+    });
     setShowModal(false);
     setFormData({
-      title: '',
+      name: '',
       description: '',
-      startDate: '',
-      endDate: '',
-      totalVoters: 100
+      startTime: '',
+      endTime: ''
     });
   };
 
@@ -34,13 +37,10 @@ const ElectionManagement = () => {
   };
 
   const getElectionStatus = (election) => {
-    const now = new Date();
-    const start = new Date(election.startDate);
-    const end = new Date(election.endDate);
-    
-    if (now < start) return 'Upcoming';
-    if (now > end) return 'Closed';
-    return 'Active';
+    if (election.status === 'active') return 'Active';
+    if (election.status === 'closed') return 'Closed';
+    if (election.status === 'suspended') return 'Suspended';
+    return 'Upcoming';
   };
 
   return (
@@ -81,7 +81,6 @@ const ElectionManagement = () => {
               <tr>
                 <th>Protocol Name</th>
                 <th>Voting Window</th>
-                <th>Total Voters</th>
                 <th>Status</th>
                 <th style={{ textAlign: 'right' }}>Actions</th>
               </tr>
@@ -90,7 +89,7 @@ const ElectionManagement = () => {
               {elections.map((election) => (
                 <tr key={election.id}>
                   <td>
-                    <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{election.title}</div>
+                    <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{election.name}</div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
                       {election.description}
                     </div>
@@ -99,16 +98,13 @@ const ElectionManagement = () => {
                     <div style={{ fontSize: '0.85rem', color: 'var(--text-primary)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
                         <Calendar size={14} color="var(--primary)" /> 
-                        {new Date(election.startDate).toLocaleString()}
+                        {new Date(election.startTime * 1000).toLocaleString()}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                         <Clock size={14} color="var(--accent)" /> 
-                        {new Date(election.endDate).toLocaleString()}
+                        {new Date(election.endTime * 1000).toLocaleString()}
                       </div>
                     </div>
-                  </td>
-                  <td>
-                    <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{election.totalVoters} voters</span>
                   </td>
                   <td>
                     <span className={`badge-${getElectionStatus(election) === 'Active' ? 'active' : 'pending'}`}>
@@ -117,25 +113,42 @@ const ElectionManagement = () => {
                   </td>
                   <td style={{ textAlign: 'right' }}>
                     <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                      <button 
-                        className="sidebar-item" 
-                        style={{ margin: 0, padding: '0.5rem' }}
-                      >
-                        <Edit3 size={16} />
-                      </button>
-                      <button 
-                        onClick={() => deleteElection(election.id)}
-                        style={{ 
-                          padding: '0.5rem', 
-                          borderRadius: '0.5rem', 
-                          border: '1px solid rgba(239, 68, 68, 0.2)', 
-                          background: 'rgba(239, 68, 68, 0.1)', 
-                          cursor: 'pointer',
-                          color: 'var(--danger)'
-                        }}
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      {election.status === 'pending' && (
+                        <button
+                          className="btn-premium"
+                          style={{ margin: 0, padding: '0.5rem 0.75rem' }}
+                          onClick={() => startElection(election.id)}
+                        >
+                          <Play size={16} /> Start
+                        </button>
+                      )}
+                      {election.status === 'active' && (
+                        <>
+                          <button
+                            className="sidebar-item"
+                            style={{ margin: 0, padding: '0.5rem 0.75rem' }}
+                            onClick={() => suspendElection(election.id, 'Maintenance')}
+                          >
+                            <PauseCircle size={16} /> Suspend
+                          </button>
+                          <button
+                            className="btn-premium"
+                            style={{ margin: 0, padding: '0.5rem 0.75rem' }}
+                            onClick={() => closeElection(election.id)}
+                          >
+                            <Square size={16} /> Close
+                          </button>
+                        </>
+                      )}
+                      {election.status === 'suspended' && (
+                        <button
+                          className="btn-premium"
+                          style={{ margin: 0, padding: '0.5rem 0.75rem' }}
+                          onClick={() => resumeElection(election.id)}
+                        >
+                          <Play size={16} /> Resume
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -187,8 +200,8 @@ const ElectionManagement = () => {
                 </label>
                 <input
                   type="text"
-                  name="title"
-                  value={formData.title}
+                  name="name"
+                  value={formData.name}
                   onChange={handleChange}
                   required
                   placeholder="e.g., Student Council 2024"
@@ -235,8 +248,8 @@ const ElectionManagement = () => {
                   </label>
                   <input
                     type="datetime-local"
-                    name="startDate"
-                    value={formData.startDate}
+                    name="startTime"
+                    value={formData.startTime}
                     onChange={handleChange}
                     required
                     style={{
@@ -257,8 +270,8 @@ const ElectionManagement = () => {
                   </label>
                   <input
                     type="datetime-local"
-                    name="endDate"
-                    value={formData.endDate}
+                    name="endTime"
+                    value={formData.endTime}
                     onChange={handleChange}
                     required
                     style={{

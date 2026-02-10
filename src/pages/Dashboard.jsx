@@ -1,5 +1,6 @@
 import React from 'react';
 import { Users, Vote, Activity, Server, ArrowUpRight } from 'lucide-react';
+import { useData } from '../context/DataContext';
 
 const StatCard = ({ title, value, icon: Icon, color, trend }) => (
   <div className="card animate-fade-in">
@@ -17,6 +18,9 @@ const StatCard = ({ title, value, icon: Icon, color, trend }) => (
 );
 
 const Dashboard = () => {
+  const { elections } = useData();
+  const activeCount = elections.filter((e) => e.status === 'active').length;
+  const totalVotes = elections.reduce((sum, election) => sum + (election.totalVotes || 0), 0);
   return (
     <div style={{ maxWidth: '1200px' }}>
       <header style={{ marginBottom: '2.5rem' }}>
@@ -25,9 +29,9 @@ const Dashboard = () => {
       </header>
       
       <div className="grid-cols-4">
-        <StatCard title="Active Elections" value="03" icon={Vote} color="79, 70, 229" trend="+2" />
-        <StatCard title="Total Voters" value="12,458" icon={Users} color="16, 185, 129" trend="+1.2k" />
-        <StatCard title="Participation" value="68.4%" icon={Activity} color="14, 165, 233" trend="+5.4%" />
+        <StatCard title="Active Elections" value={String(activeCount).padStart(2, '0')} icon={Vote} color="79, 70, 229" trend="Live" />
+        <StatCard title="Total Votes" value={totalVotes} icon={Users} color="16, 185, 129" trend="On-chain" />
+        <StatCard title="Participation" value={activeCount ? 'Live' : 'Idle'} icon={Activity} color="14, 165, 233" trend="Real-time" />
         <StatCard title="Nodes Online" value="Active" icon={Server} color="139, 92, 246" trend="100%" />
       </div>
 

@@ -10,14 +10,14 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    const result = login(email, password);
+    const result = await login(email, password);
     if (result.success) {
       // Redirect based on role
-      if (result.user.role === 'admin') {
+      if (result.user.role?.toUpperCase() === 'ADMIN') {
         navigate('/admin/dashboard');
       } else {
         navigate('/voter/dashboard');
@@ -123,10 +123,9 @@ const Login = () => {
         </div>
 
         <div style={{ marginTop: '2rem', padding: '1rem', background: 'rgba(99, 102, 241, 0.05)', borderRadius: '0.75rem', border: '1px solid rgba(99, 102, 241, 0.1)' }}>
-          <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', fontWeight: 600 }}>Demo Credentials:</p>
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', fontWeight: 600 }}>Tip</p>
           <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-            <strong>Admin:</strong> admin@vortex.com / admin123<br />
-            <strong>Voter:</strong> voter@vortex.com / voter123
+            Use your registered email and password to sign in.
           </p>
         </div>
       </div>

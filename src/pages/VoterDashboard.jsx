@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
@@ -7,30 +7,38 @@ import { Vote, CheckCircle2, Clock, XCircle, Search, Receipt, LogOut } from 'luc
 
 const VoterDashboard = () => {
   const { user, logout } = useAuth();
-  const { elections, getUserVotes, hasUserVoted, getVoteByReceipt } = useData();
+  const { elections, hasUserVoted, hasVotedMap, verifyReceipt, lastReceipt } = useData();
   const [receiptSearch, setReceiptSearch] = useState('');
   const [searchResult, setSearchResult] = useState(null);
+  const [checkingStatus, setCheckingStatus] = useState(false);
 
-  const userVotes = getUserVotes(user.id);
-
-  const handleReceiptSearch = () => {
-    const vote = getVoteByReceipt(receiptSearch);
-    setSearchResult(vote || 'not_found');
+  const handleReceiptSearch = async () => {
+    if (!receiptSearch.trim()) {
+      return;
+    }
+    try {
+      const vote = await verifyReceipt(receiptSearch.trim());
+      setSearchResult(vote || 'not_found');
+    } catch (error) {
+      setSearchResult('not_found');
+    }
   };
 
-  const getElectionStatus = (election) => {
-    const now = new Date();
-    const start = new Date(election.startDate);
-    const end = new Date(election.endDate);
+  useEffect(() => {
+    const checkStatuses = async () => {
+      if (!elections.length) {
+        return;
+      }
+      setCheckingStatus(true);
+      await Promise.all(elections.map((election) => hasUserVoted(election.id)));
+      setCheckingStatus(false);
+    };
 
-    if (now < start) return 'upcoming';
-    if (now > end) return 'closed';
-    return 'active';
-  };
+    checkStatuses();
+  }, [elections, hasUserVoted]);
 
-  const activeElections = elections.filter(e => getElectionStatus(e) === 'active');
-  const upcomingElections = elections.filter(e => getElectionStatus(e) === 'upcoming');
-  const closedElections = elections.filter(e => getElectionStatus(e) === 'closed');
+  const activeElections = elections.filter((e) => e.status === 'active');
+  const upcomingElections = elections.filter((e) => e.status === 'pending');
 
   return (
     <div style={{ minHeight: '100vh', padding: '2rem' }}>
@@ -87,8 +95,8 @@ const VoterDashboard = () => {
                 <CheckCircle2 size={28} color="var(--success)" />
               </div>
               <div>
-                <div className="stat-glow" style={{ fontSize: '2rem' }}>{userVotes.length}</div>
-                <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Votes Cast</div>
+                <div className="stat-glow" style={{ fontSize: '2rem' }}>{Object.values(hasVotedMap).filter(Boolean).length}</div>
+                <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Elections Voted</div>
               </div>
             </div>
           </div>
@@ -149,7 +157,7 @@ const VoterDashboard = () => {
                   <p style={{ color: 'var(--success)', fontWeight: 600 }}>Vote Verified</p>
                   <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '0.5rem' }}>
                     Receipt ID: {searchResult.receiptId}<br />
-                    Timestamp: {new Date(searchResult.timestamp).toLocaleString()}
+                    Timestamp: {searchResult.timestamp ? new Date(searchResult.timestamp * 1000).toLocaleString() : 'Unavailable'}
                   </p>
                 </div>
               )}
@@ -163,12 +171,12 @@ const VoterDashboard = () => {
             <h2 style={{ fontSize: '1.75rem', marginBottom: '1.5rem' }}>Active Elections</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.5rem' }}>
               {activeElections.map((election, index) => {
-                const voted = hasUserVoted(user.id, election.id);
+                const voted = Boolean(hasVotedMap[election.id]);
                 return (
                   <div key={election.id} className="card glass animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
                     <div style={{ marginBottom: '1rem' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.75rem' }}>
-                        <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>{election.title}</h3>
+                        <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>{election.name}</h3>
                         <span className={voted ? 'badge-active' : 'badge-pending'}>
                           {voted ? 'Voted' : 'Pending'}
                         </span>
@@ -180,11 +188,11 @@ const VoterDashboard = () => {
 
                     <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '0.75rem', marginBottom: '1rem' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                        <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Turnout</span>
-                        <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>{Math.round((election.votedCount / election.totalVoters) * 100)}%</span>
+                        <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Total Votes</span>
+                        <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>{election.totalVotes}</span>
                       </div>
                       <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '999px', overflow: 'hidden' }}>
-                        <div style={{ width: `${(election.votedCount / election.totalVoters) * 100}%`, height: '100%', background: 'linear-gradient(to right, var(--primary), var(--accent))', borderRadius: '999px' }}></div>
+                        <div style={{ width: '100%', height: '100%', background: 'linear-gradient(to right, var(--primary), var(--accent))', borderRadius: '999px', opacity: 0.35 }}></div>
                       </div>
                     </div>
 
@@ -200,39 +208,22 @@ const VoterDashboard = () => {
           </div>
         )}
 
-        {/* Voting History */}
-        {userVotes.length > 0 && (
+        {lastReceipt && (
           <div>
-            <h2 style={{ fontSize: '1.75rem', marginBottom: '1.5rem' }}>Voting History</h2>
-            <div className="card glass">
-              <table style={{ width: '100%' }}>
-                <thead>
-                  <tr>
-                    <th>Election</th>
-                    <th>Receipt ID</th>
-                    <th>Date</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {userVotes.map((vote) => {
-                    const election = elections.find(e => e.id === vote.electionId);
-                    return (
-                      <tr key={vote.id}>
-                        <td style={{ fontWeight: 600 }}>{election?.title || 'Unknown'}</td>
-                        <td style={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>{vote.receiptId}</td>
-                        <td>{new Date(vote.timestamp).toLocaleDateString()}</td>
-                        <td><span className="badge-active">Verified</span></td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+            <h2 style={{ fontSize: '1.75rem', marginBottom: '1.5rem' }}>Latest Receipt</h2>
+            <div className="card glass" style={{ padding: '1.5rem' }}>
+              <div style={{ fontWeight: 700, marginBottom: '0.5rem' }}>Receipt ID</div>
+              <div style={{ fontFamily: 'monospace', fontSize: '0.95rem', color: 'var(--primary)' }}>{lastReceipt.receiptId}</div>
+              {lastReceipt.timestamp && (
+                <div style={{ marginTop: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                  {new Date(lastReceipt.timestamp * 1000).toLocaleString()}
+                </div>
+              )}
             </div>
           </div>
         )}
 
-        {activeElections.length === 0 && userVotes.length === 0 && (
+        {activeElections.length === 0 && !lastReceipt && !checkingStatus && (
           <div className="card glass" style={{ padding: '4rem', textAlign: 'center' }}>
             <XCircle size={64} color="var(--text-secondary)" style={{ margin: '0 auto 1rem' }} />
             <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>No Active Elections</h3>

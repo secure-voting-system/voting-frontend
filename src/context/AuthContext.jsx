@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { authAPI } from '../services/api';
 
 const AuthContext = createContext();
 
@@ -15,7 +16,6 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is logged in on mount
     const storedUser = localStorage.getItem('vortex_current_user');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
@@ -23,51 +23,38 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const login = (email, password) => {
-    const users = JSON.parse(localStorage.getItem('vortex_users') || '[]');
-    const foundUser = users.find(u => u.email === email && u.password === password);
-    
-    if (foundUser) {
-      const userWithoutPassword = { ...foundUser };
-      delete userWithoutPassword.password;
-      setUser(userWithoutPassword);
-      localStorage.setItem('vortex_current_user', JSON.stringify(userWithoutPassword));
-      return { success: true, user: userWithoutPassword };
+  const login = async (email, password) => {
+    try {
+      const data = await authAPI.login(email, password);
+      localStorage.setItem('auth_token', data.token);
+      localStorage.setItem('vortex_current_user', JSON.stringify(data.user));
+      setUser(data.user);
+      return { success: true, user: data.user };
+    } catch (error) {
+      return { success: false, error: error.response?.data?.message || 'Invalid credentials' };
     }
-    
-    return { success: false, error: 'Invalid credentials' };
   };
 
-  const register = (email, password, name, role = 'voter') => {
-    const users = JSON.parse(localStorage.getItem('vortex_users') || '[]');
-    
-    // Check if user already exists
-    if (users.find(u => u.email === email)) {
-      return { success: false, error: 'Email already registered' };
+  const register = async ({ name, email, password, voterId, role, adminSecret }) => {
+    try {
+      const payload = {
+        name,
+        email,
+        password,
+        voterId,
+        role,
+        adminSecret,
+      };
+      await authAPI.register(payload);
+      return await login(email, password);
+    } catch (error) {
+      return { success: false, error: error.response?.data?.message || 'Registration failed' };
     }
-
-    const newUser = {
-      id: `user-${Date.now()}`,
-      email,
-      password,
-      name,
-      role
-    };
-
-    users.push(newUser);
-    localStorage.setItem('vortex_users', JSON.stringify(users));
-
-    // Auto-login after registration
-    const userWithoutPassword = { ...newUser };
-    delete userWithoutPassword.password;
-    setUser(userWithoutPassword);
-    localStorage.setItem('vortex_current_user', JSON.stringify(userWithoutPassword));
-
-    return { success: true, user: userWithoutPassword };
   };
 
   const logout = () => {
     setUser(null);
+    localStorage.removeItem('auth_token');
     localStorage.removeItem('vortex_current_user');
   };
 
@@ -78,8 +65,8 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     isAuthenticated: !!user,
-    isAdmin: user?.role === 'admin',
-    isVoter: user?.role === 'voter'
+    isAdmin: user?.role?.toUpperCase() === 'ADMIN',
+    isVoter: user?.role?.toUpperCase() === 'VOTER'
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

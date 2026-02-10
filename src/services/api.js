@@ -61,20 +61,14 @@ export const authAPI = {
   },
 
   // Register
-  register: async (email, password, name, role) => {
-    const response = await api.post('/auth/register', { email, password, name, role });
-    return response.data;
-  },
-
-  // Logout
-  logout: async () => {
-    const response = await api.post('/auth/logout');
+  register: async (payload) => {
+    const response = await api.post('/auth/register', payload);
     return response.data;
   },
 
   // Get current user
   getCurrentUser: async () => {
-    const response = await api.get('/auth/me');
+    const response = await api.get('/users/profile');
     return response.data;
   },
 };
@@ -102,13 +96,7 @@ export const electionAPI = {
 
   // Update election
   update: async (id, electionData) => {
-    const response = await api.put(`/elections/${id}`, electionData);
-    return response.data;
-  },
-
-  // Delete election
-  delete: async (id) => {
-    const response = await api.delete(`/elections/${id}`);
+    const response = await api.patch(`/elections/${id}`, electionData);
     return response.data;
   },
 
@@ -123,38 +111,30 @@ export const electionAPI = {
     const response = await api.post(`/elections/${id}/close`);
     return response.data;
   },
+
+  suspend: async (id, reason) => {
+    const response = await api.post(`/elections/${id}/suspend`, { reason });
+    return response.data;
+  },
+
+  resume: async (id) => {
+    const response = await api.post(`/elections/${id}/resume`);
+    return response.data;
+  },
 };
 
 // ==================== CANDIDATE APIs ====================
 
 export const candidateAPI = {
-  // Get all candidates
-  getAll: async () => {
-    const response = await api.get('/candidates');
-    return response.data;
-  },
-
   // Get candidates by election
   getByElection: async (electionId) => {
-    const response = await api.get(`/candidates/election/${electionId}`);
+    const response = await api.get(`/elections/${electionId}/candidates`);
     return response.data;
   },
 
   // Create candidate
-  create: async (candidateData) => {
-    const response = await api.post('/candidates', candidateData);
-    return response.data;
-  },
-
-  // Update candidate
-  update: async (id, candidateData) => {
-    const response = await api.put(`/candidates/${id}`, candidateData);
-    return response.data;
-  },
-
-  // Delete candidate
-  delete: async (id) => {
-    const response = await api.delete(`/candidates/${id}`);
+  create: async (electionId, candidateData) => {
+    const response = await api.post(`/elections/${electionId}/candidates`, candidateData);
     return response.data;
   },
 };
@@ -164,63 +144,34 @@ export const candidateAPI = {
 export const voteAPI = {
   // Submit vote
   submit: async (electionId, candidateId) => {
-    const response = await api.post('/votes', { electionId, candidateId });
-    return response.data;
-  },
-
-  // Get user's votes
-  getUserVotes: async () => {
-    const response = await api.get('/votes/my-votes');
+    const response = await api.post('/votes/cast', { electionId, candidateId });
     return response.data;
   },
 
   // Verify vote by receipt
   verifyReceipt: async (receiptId) => {
-    const response = await api.get(`/votes/receipt/${receiptId}`);
+    const response = await api.get(`/votes/verify/${receiptId}`);
     return response.data;
   },
-
-  // Get election results
-  getResults: async (electionId) => {
-    const response = await api.get(`/votes/results/${electionId}`);
-    return response.data;
-  },
-};
-
-// ==================== VOTER APPROVAL APIs ====================
-
-export const voterAPI = {
-  // Get pending voters
-  getPending: async () => {
-    const response = await api.get('/voters/pending');
-    return response.data;
-  },
-
-  // Approve voter
-  approve: async (voterId) => {
-    const response = await api.post(`/voters/${voterId}/approve`);
-    return response.data;
-  },
-
-  // Reject voter
-  reject: async (voterId) => {
-    const response = await api.post(`/voters/${voterId}/reject`);
+  hasVoted: async (electionId) => {
+    const response = await api.get(`/votes/status/${electionId}`);
     return response.data;
   },
 };
 
-// ==================== ANALYTICS APIs ====================
+// ==================== RESULTS APIs ====================
 
-export const analyticsAPI = {
-  // Get dashboard stats
-  getDashboardStats: async () => {
-    const response = await api.get('/analytics/dashboard');
+export const resultAPI = {
+  getAll: async () => {
+    const response = await api.get('/results');
     return response.data;
   },
-
-  // Get election turnout
-  getTurnout: async (electionId) => {
-    const response = await api.get(`/analytics/turnout/${electionId}`);
+  getByElection: async (electionId) => {
+    const response = await api.get(`/results/${electionId}`);
+    return response.data;
+  },
+  tally: async (electionId) => {
+    const response = await api.post(`/results/${electionId}/tally`);
     return response.data;
   },
 };

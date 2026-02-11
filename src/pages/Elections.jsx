@@ -35,7 +35,7 @@ const Elections = () => {
   return (
     <div className="stack">
       <div className="card stack">
-        <h3>Create election</h3>
+        <div className="section-title">Create election</div>
         <form className="stack" onSubmit={handleCreate}>
           <div className="field">
             <label>Election name</label>
@@ -64,10 +64,10 @@ const Elections = () => {
       </div>
 
       <div className="card stack">
-        <h3>Existing elections</h3>
-        {elections.length === 0 && <p className="helper">No elections created yet.</p>}
+        <div className="section-title">Existing elections</div>
+        {elections.length === 0 && <div className="empty-state">No elections created yet.</div>}
         {elections.map((election) => (
-          <div key={election.id} className="card" style={{ background: 'var(--surface-2)' }}>
+          <div key={election.id} className="card soft">
             <div className="stack">
               <div>
                 <h4>{election.name}</h4>

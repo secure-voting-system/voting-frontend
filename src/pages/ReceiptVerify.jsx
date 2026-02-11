@@ -27,7 +27,6 @@ const ReceiptVerify = () => {
     <div className="stack">
       <div className="card stack">
         <h3>Verify vote receipt</h3>
-        <p className="helper">Enter a receipt ID to confirm the vote exists on-chain.</p>
         <form className="stack" onSubmit={handleVerify}>
           <div className="field">
             <label>Receipt ID</label>
@@ -46,7 +45,7 @@ const ReceiptVerify = () => {
       </div>
       {result && (
         <div className="card stack">
-          <h3>Receipt details</h3>
+          <div className="section-title">Receipt details</div>
           <div className="helper">Receipt ID</div>
           <strong>{result.receiptId || receiptId}</strong>
           {result.timestamp && (

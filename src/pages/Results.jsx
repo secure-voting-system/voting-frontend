@@ -54,8 +54,17 @@ const Results = () => {
       </div>
 
       <div className="card stack">
-        <h3>Totals</h3>
+        <div className="section-title">Totals</div>
         <p className="helper">Total votes: {totalVotes}</p>
+        {status.loading && (
+          <div className="stack">
+            <div className="skeleton w-40" />
+            <div className="skeleton block" />
+          </div>
+        )}
+        {!status.loading && Object.keys(tally?.candidateVotes || {}).length === 0 && (
+          <div className="empty-state">No results are available for this election yet.</div>
+        )}
         <div className="table-wrapper">
           <table className="table">
             <thead>

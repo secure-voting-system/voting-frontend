@@ -9,18 +9,16 @@ const AuditorDashboard = () => {
     <div className="stack">
       <div className="card stack">
         <h3>Auditor workspace</h3>
-        <p className="helper">Review election activity and verify audit trails.</p>
       </div>
 
       <div className="grid cols-2">
         <div className="card stack">
-          <h3>Tracked elections</h3>
+          <div className="section-title">Tracked elections</div>
           <p className="helper">{elections.length} elections on record.</p>
           <Link className="button" to="/auditor/logs">View audit logs</Link>
         </div>
         <div className="card stack">
-          <h3>Verification</h3>
-          <p className="helper">Cross-check blockchain receipts with system records.</p>
+          <div className="section-title">Verification</div>
           <Link className="button secondary" to="/voter/verify">Verify receipt</Link>
         </div>
       </div>

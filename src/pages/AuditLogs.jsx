@@ -49,8 +49,16 @@ const AuditLogs = () => {
       </div>
 
       <div className="card stack">
-        <h3>Entries</h3>
-        {logs.length === 0 && <p className="helper">No audit events found for this election.</p>}
+        <div className="section-title">Entries</div>
+        {!status.loading && logs.length === 0 && (
+          <div className="empty-state">No audit events found for this election.</div>
+        )}
+        {status.loading && (
+          <div className="stack">
+            <div className="skeleton w-60" />
+            <div className="skeleton block" />
+          </div>
+        )}
         <div className="table-wrapper">
           <table className="table">
             <thead>

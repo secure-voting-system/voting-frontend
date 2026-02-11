@@ -1,5 +1,7 @@
 import React, { useMemo } from 'react';
+import { Menu } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import ThemeToggle from './ThemeToggle';
 
 const titleMap = {
   '/voter/dashboard': 'Voter dashboard',
@@ -12,8 +14,8 @@ const titleMap = {
   '/auditor/logs': 'Audit logs',
 };
 
-const TopBar = ({ path }) => {
-  const { user } = useAuth();
+const TopBar = ({ path, onToggleSidebar }) => {
+  const { logout } = useAuth();
   const title = useMemo(() => {
     if (titleMap[path]) {
       return titleMap[path];
@@ -26,11 +28,18 @@ const TopBar = ({ path }) => {
 
   return (
     <div className="topbar">
-      <div>
+      <div className="topbar-title">
+        <button type="button" className="button ghost" onClick={onToggleSidebar} aria-label="Toggle sidebar">
+          <Menu size={20} strokeWidth={2} />
+        </button>
         <h2>{title}</h2>
-        <p className="helper">Signed in as {user?.email}</p>
       </div>
-      <div className="badge info">Role: {user?.role || 'User'}</div>
+      <div className="topbar-actions">
+        <ThemeToggle />
+        <button type="button" className="button secondary" onClick={logout}>
+          Sign out
+        </button>
+      </div>
     </div>
   );
 };

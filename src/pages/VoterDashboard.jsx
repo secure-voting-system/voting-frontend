@@ -22,45 +22,44 @@ const VoterDashboard = () => {
 
   return (
     <div className="stack">
-      <div className="card">
+      <div className="card stack">
         <h3>Welcome, {user?.name || 'Voter'}</h3>
-        <p className="helper">You can vote in active elections and verify receipts at any time.</p>
         <div className={`badge ${sseConnected ? 'success' : 'warning'}`}>
           {sseConnected ? 'Live updates connected' : 'Live updates offline'}
         </div>
       </div>
 
       <div className="grid cols-3">
-        <div className="card">
-          <h3>Active elections</h3>
-          <p className="helper">{activeElections.length} running now</p>
+        <div className="card stat">
+          <span className="helper">Active elections</span>
+          <div className="stat-value">{activeElections.length}</div>
         </div>
-        <div className="card">
-          <h3>Upcoming</h3>
-          <p className="helper">{upcomingElections.length} scheduled</p>
+        <div className="card stat">
+          <span className="helper">Upcoming</span>
+          <div className="stat-value">{upcomingElections.length}</div>
         </div>
-        <div className="card">
-          <h3>Votes cast</h3>
-          <p className="helper">{votedCount} confirmed</p>
+        <div className="card stat">
+          <span className="helper">Votes cast</span>
+          <div className="stat-value">{votedCount}</div>
         </div>
       </div>
 
       <div className="card stack">
-        <h3>Active elections</h3>
-        {activeElections.length === 0 && <p className="helper">No active elections right now.</p>}
+        <div className="section-title">Active elections</div>
+        {activeElections.length === 0 && (
+          <div className="empty-state">No active elections right now.</div>
+        )}
         {activeElections.map((election) => {
           const voted = Boolean(hasVotedMap[election.id]);
           return (
-            <div key={election.id} className="card" style={{ background: 'var(--surface-2)' }}>
+            <div key={election.id} className="card soft">
               <div className="stack">
                 <div>
                   <h4>{election.name}</h4>
                   <p className="helper">{election.description || 'No description provided.'}</p>
                 </div>
                 <div className="grid cols-2">
-                  <div>
-                    <div className="badge success">{election.status}</div>
-                  </div>
+                  <div className="badge success">{election.status}</div>
                   <div className="helper">Total votes: {election.totalVotes || 0}</div>
                 </div>
                 {voted ? (
@@ -78,12 +77,12 @@ const VoterDashboard = () => {
 
       <div className="grid cols-2">
         <div className="card stack">
-          <h3>Quick actions</h3>
+          <div className="section-title">Quick actions</div>
           <Link className="button" to="/voter/verify">Verify receipt</Link>
           <Link className="button secondary" to="/voter/results">View results</Link>
         </div>
         <div className="card stack">
-          <h3>Latest receipt</h3>
+          <div className="section-title">Latest receipt</div>
           {lastReceipt ? (
             <div className="stack">
               <div className="helper">Receipt ID</div>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { Container, PageWrapper, Section } from '../components/Layout';
 
 const Register = () => {
   const { register } = useAuth();
@@ -38,53 +39,57 @@ const Register = () => {
   };
 
   return (
-    <div className="auth-layout">
-      <form className="card auth-card stack" onSubmit={handleSubmit}>
-        <div>
-          <h2>Create account</h2>
-          <p className="helper">Register as voter, admin, authority, or auditor.</p>
-        </div>
-        <div className="field">
-          <label>Full name</label>
-          <input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} required />
-        </div>
-        <div className="field">
-          <label>Email</label>
-          <input type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} required />
-        </div>
-        <div className="field">
-          <label>Voter ID</label>
-          <input value={form.voterId} onChange={(event) => setForm({ ...form, voterId: event.target.value })} required />
-        </div>
-        <div className="field">
-          <label>Password</label>
-          <input type="password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} required />
-        </div>
-        <div className="field">
-          <label>Confirm password</label>
-          <input type="password" value={form.confirmPassword} onChange={(event) => setForm({ ...form, confirmPassword: event.target.value })} required />
-        </div>
-        <div className="field">
-          <label>Role</label>
-          <select value={form.role} onChange={(event) => setForm({ ...form, role: event.target.value })}>
-            <option value="VOTER">Voter</option>
-            <option value="ADMIN">Admin</option>
-            <option value="AUTHORITY">Authority</option>
-            <option value="AUDITOR">Auditor</option>
-          </select>
-        </div>
-        {form.role !== 'VOTER' && (
-          <div className="field">
-            <label>Admin secret</label>
-            <input type="password" value={form.adminSecret} onChange={(event) => setForm({ ...form, adminSecret: event.target.value })} required />
-          </div>
-        )}
-        {error && <div className="badge danger">{error}</div>}
-        <button type="submit" className="button">Register</button>
-        <Link className="button secondary" to="/login">Back to sign in</Link>
-        <Link className="helper" to="/">Back to home</Link>
-      </form>
-    </div>
+    <PageWrapper className="page-full">
+      <Container className="container-narrow">
+        <Section className="section-center">
+          <form className="card auth-card stack" onSubmit={handleSubmit}>
+            <div className="stack">
+              <h2>Create account</h2>
+              <p className="helper">Register as voter, admin, authority, or auditor.</p>
+            </div>
+            <div className="field">
+              <label>Full name</label>
+              <input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="Full name" required />
+            </div>
+            <div className="field">
+              <label>Email</label>
+              <input type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} placeholder="you@example.com" required />
+            </div>
+            <div className="field">
+              <label>Voter ID</label>
+              <input value={form.voterId} onChange={(event) => setForm({ ...form, voterId: event.target.value })} placeholder="Voter ID" required />
+            </div>
+            <div className="field">
+              <label>Password</label>
+              <input type="password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} placeholder="Create a password" required />
+            </div>
+            <div className="field">
+              <label>Confirm password</label>
+              <input type="password" value={form.confirmPassword} onChange={(event) => setForm({ ...form, confirmPassword: event.target.value })} placeholder="Re-enter password" required />
+            </div>
+            <div className="field">
+              <label>Role</label>
+              <select value={form.role} onChange={(event) => setForm({ ...form, role: event.target.value })}>
+                <option value="VOTER">Voter</option>
+                <option value="ADMIN">Admin</option>
+                <option value="AUTHORITY">Authority</option>
+                <option value="AUDITOR">Auditor</option>
+              </select>
+            </div>
+            {form.role !== 'VOTER' && (
+              <div className="field">
+                <label>Admin secret</label>
+                <input type="password" value={form.adminSecret} onChange={(event) => setForm({ ...form, adminSecret: event.target.value })} placeholder="Enter admin secret" required />
+              </div>
+            )}
+            {error && <div className="badge danger">{error}</div>}
+            <button type="submit" className="button">Register</button>
+            <Link className="button secondary" to="/login">Back to sign in</Link>
+            <Link className="helper" to="/">Back to home</Link>
+          </form>
+        </Section>
+      </Container>
+    </PageWrapper>
   );
 };
 

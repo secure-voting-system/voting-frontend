@@ -41,12 +41,8 @@ const CastVote = () => {
     <div className="stack">
       <div className="card stack">
         <h3>Cast vote</h3>
-        <p className="helper">Select a candidate for the chosen election.</p>
-        {election ? (
-          <div className="badge success">{election.name}</div>
-        ) : (
-          <div className="badge warning">Election not found</div>
-        )}
+        {election && <div className="badge success">{election.name}</div>}
+        {!election && <div className="badge warning">Election not found</div>}
       </div>
 
       <form className="card stack" onSubmit={handleSubmit}>
@@ -63,7 +59,14 @@ const CastVote = () => {
         </div>
         {alreadyVoted && <div className="badge warning">You have already voted in this election.</div>}
         {status.error && <div className="badge danger">{status.error}</div>}
-        {status.success && <div className="badge success">{status.success}</div>}
+        {status.success && (
+          <div className="status-panel">
+            <div>
+              <strong>Vote confirmed</strong>
+              <div className="helper">{status.success}</div>
+            </div>
+          </div>
+        )}
         <button className="button" type="submit" disabled={!selectedCandidate || alreadyVoted || status.loading}>
           {status.loading ? 'Submitting...' : 'Submit vote'}
         </button>

@@ -48,7 +48,7 @@ const Candidates = () => {
   return (
     <div className="stack">
       <div className="card stack">
-        <h3>Register candidate</h3>
+        <div className="section-title">Register candidate</div>
         <div className="field">
           <label>Election</label>
           <select value={selectedElection} onChange={(event) => setSelectedElection(event.target.value)}>
@@ -83,8 +83,8 @@ const Candidates = () => {
       </div>
 
       <div className="card stack">
-        <h3>Candidate list</h3>
-        {candidates.length === 0 && <p className="helper">No candidates registered yet.</p>}
+        <div className="section-title">Candidate list</div>
+        {candidates.length === 0 && <div className="empty-state">No candidates registered yet.</div>}
         <div className="table-wrapper">
           <table className="table">
             <thead>

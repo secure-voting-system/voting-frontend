@@ -11,33 +11,30 @@ const AdminDashboard = () => {
     <div className="stack">
       <div className="card stack">
         <h3>Admin overview</h3>
-        <p className="helper">Manage elections and candidates from one place.</p>
       </div>
 
       <div className="grid cols-3">
-        <div className="card">
-          <h3>Total elections</h3>
-          <p className="helper">{elections.length}</p>
+        <div className="card stat">
+          <span className="helper">Total elections</span>
+          <div className="stat-value">{elections.length}</div>
         </div>
-        <div className="card">
-          <h3>Active</h3>
-          <p className="helper">{active.length}</p>
+        <div className="card stat">
+          <span className="helper">Active</span>
+          <div className="stat-value">{active.length}</div>
         </div>
-        <div className="card">
-          <h3>Upcoming</h3>
-          <p className="helper">{pending.length}</p>
+        <div className="card stat">
+          <span className="helper">Upcoming</span>
+          <div className="stat-value">{pending.length}</div>
         </div>
       </div>
 
       <div className="grid cols-2">
         <div className="card stack">
-          <h3>Elections</h3>
-          <p className="helper">Create, start, pause, or close elections.</p>
+          <div className="section-title">Elections</div>
           <Link className="button" to="/admin/elections">Go to elections</Link>
         </div>
         <div className="card stack">
-          <h3>Candidates</h3>
-          <p className="helper">Register and manage candidates by election.</p>
+          <div className="section-title">Candidates</div>
           <Link className="button" to="/admin/candidates">Manage candidates</Link>
         </div>
       </div>

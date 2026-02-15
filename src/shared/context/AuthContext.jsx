@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
   const login = (email, password) => {
     const users = JSON.parse(localStorage.getItem('vortex_users') || '[]');
     const foundUser = users.find(u => u.email === email && u.password === password);
-    
+
     if (foundUser) {
       const userWithoutPassword = { ...foundUser };
       delete userWithoutPassword.password;
@@ -34,13 +34,13 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('vortex_current_user', JSON.stringify(userWithoutPassword));
       return { success: true, user: userWithoutPassword };
     }
-    
+
     return { success: false, error: 'Invalid credentials' };
   };
 
   const register = (email, password, name, role = 'voter') => {
     const users = JSON.parse(localStorage.getItem('vortex_users') || '[]');
-    
+
     // Check if user already exists
     if (users.find(u => u.email === email)) {
       return { success: false, error: 'Email already registered' };
@@ -79,6 +79,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     isAuthenticated: !!user,
     isAdmin: user?.role === 'admin',
+    isAuditor: user?.role === 'auditor',
     isVoter: user?.role === 'voter'
   };
 

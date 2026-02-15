@@ -2,12 +2,13 @@ import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../shared/context/AuthContext';
 import ThemeToggle from '../../shared/components/ThemeToggle';
-import { 
-  LayoutDashboard, 
-  Settings, 
-  Users, 
-  UserCheck, 
-  Zap, 
+import {
+  LayoutDashboard,
+  Settings,
+  Users,
+  UserCheck,
+  Zap,
+  BarChart3,
   LogOut
 } from 'lucide-react';
 
@@ -21,6 +22,7 @@ const AdminLayout = ({ children }) => {
     { title: 'Candidates', path: '/admin/candidates', icon: Users },
     { title: 'Verifications', path: '/admin/voters', icon: UserCheck },
     { title: 'Live Control', path: '/admin/control', icon: Zap },
+    { title: 'Results', path: '/admin/results', icon: BarChart3 },
   ];
 
   const handleLogout = () => {
@@ -39,7 +41,7 @@ const AdminLayout = ({ children }) => {
           <ThemeToggle />
         </div>
 
-        
+
         <nav style={{ flex: 1 }}>
           {links.map((link) => (
             <NavLink

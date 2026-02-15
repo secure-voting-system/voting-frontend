@@ -1,15 +1,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  --primary: #FF9933; /* Saffron */
-  --primary-glow: rgba(255, 153, 51, 0.5);
-  --accent: #138808; /* Green */
-  --accent-secondary: #000080; /* Navy Blue */
-  --bg-deep: #020617;
-  --glass-bg: rgba(15, 23, 42, 0.6);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
+  --primary: #06b6d4; /* Cyan-500 - Cyber Neon */
+  --primary-glow: rgba(6, 182, 212, 0.6);
+  --accent: #8b5cf6; /* Violet-500 */
+  --accent-secondary: #10b981; /* Emerald-500 */
+  --bg-deep: #000000; /* Pure Black - Infinite Void */
+  --glass-bg: rgba(0, 0, 0, 0.85); /* Black Glass */
+  --glass-border: rgba(6, 182, 212, 0.3); /* Neon Cyan Border */
+  --text-primary: #ffffff;
+  --text-secondary: #94a3b8; /* Slate-400 */
   --success: #10b981;
   --danger: #ef4444;
   --warning: #f59e0b;
@@ -17,21 +17,21 @@
 
 /* Light Mode Theme */
 [data-theme="light"] {
-  --bg-deep: #f8fafc;
-  --glass-bg: rgba(255, 255, 255, 0.8);
-  --glass-border: rgba(0, 0, 0, 0.1);
+  --bg-deep: #ffffff;
+  --glass-bg: rgba(255, 255, 255, 0.95);
+  --glass-border: rgba(6, 182, 212, 0.2);
   --text-primary: #0f172a;
-  --text-secondary: #475569;
+  --text-secondary: #334155;
 }
 
 [data-theme="light"] body {
-  background: linear-gradient(135deg, #fff5eb 0%, #f0fdf4 100%);
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfeff 100%);
 }
 
 /* Better visibility for headings in light mode */
 [data-theme="light"] h1,
 [data-theme="light"] h2 {
-  background: linear-gradient(135deg, #d97706, #15803d) !important;
+  background: linear-gradient(135deg, #06b6d4, #8b5cf6) !important;
   -webkit-background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
   background-clip: text !important;
@@ -95,8 +95,8 @@
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: radial-gradient(ellipse at top, #1e293b 0%, var(--bg-deep) 50%);
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg-deep); /* Cleaner flat background for modern look */
   color: var(--text-primary);
   min-height: 100vh;
   overflow-x: hidden;
@@ -180,11 +180,7 @@ a:hover {
 }
 
 /* Tricolor accent */
-.tricolor-bar {
-  height: 4px;
-  background: linear-gradient(to right, var(--primary) 33%, white 33%, white 66%, var(--accent) 66%);
-  width: 100%;
-}
+
 
 /* Layout */
 .layout-root {
@@ -433,16 +429,17 @@ body::before {
   width: 100%;
   height: 100%;
   background: 
-    radial-gradient(circle at 20% 30%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
-    radial-gradient(circle at 80% 70%, rgba(6, 182, 212, 0.1) 0%, transparent 40%),
-    radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.05) 0%, transparent 60%);
+    linear-gradient(rgba(6, 182, 212, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(6, 182, 212, 0.05) 1px, transparent 1px),
+    radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.08) 0%, transparent 70%);
+  background-size: 50px 50px, 50px 50px, 100% 100%;
   z-index: -1;
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
+::-webkit-scrollbar-thumb { background: linear-gradient(to bottom, var(--primary), var(--accent)); border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
 
 /* Premium Glassmorphism */
@@ -529,8 +526,9 @@ body::before {
   align-items: center;
   gap: 0.5rem;
   color: white;
-  background: linear-gradient(135deg, var(--primary), #8b5cf6);
-  box-shadow: 0 4px 15px var(--primary-glow);
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4);
+  color: white;
 }
 
 .btn-premium:hover {
@@ -541,7 +539,7 @@ body::before {
 .stat-glow {
   font-size: 2rem;
   font-weight: 800;
-  background: linear-gradient(to right, #fff, var(--primary));
+  background: linear-gradient(to right, var(--primary), #ffffff, var(--accent)); /* Tricolor text */
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -586,6 +584,8 @@ td:last-child { border-radius: 0 0.75rem 0.75rem 0; }
 }
 
 .sidebar-item.active {
+  background: linear-gradient(90deg, rgba(6, 182, 212, 0.15), transparent);
+  color: var(--primary);
   border-left: 4px solid var(--primary);
 }
 

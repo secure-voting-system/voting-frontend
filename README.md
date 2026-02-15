@@ -1,94 +1,80 @@
-# Voting Frontend
+# Secure Voting System - Frontend
 
-React-based frontend application for the Secure & Transparent Electronic Voting System.
+A modern, secure, and decentralized voting platform built with React, Vite, and Tailwind CSS.
 
-## Features
+## 🚀 Features
 
-- User authentication (login/register)
-- Voter dashboard
-- Vote casting interface
-- Results viewing
-- Protected routes with role-based access
+- **Decentralized Voting:** Secure and transparent voting mechanism.
+- **Role-Based Access:** Distinct features for Administrators and Voters.
+- **Real-time Analytics:** Interactive dashboards visualizing voting participation and node status.
+- **Cyber Aesthetic UI:** High-contrast "Deep Black" and "Neon Cyan/Violet" theme for a premium, security-focused look.
+- **Responsive Design:** Fully optimized for all device sizes.
 
-## Tech Stack
+## 🛠️ Tech Stack
 
-- **React** 18.2
-- **React Router** for navigation
-- **Axios** for API communication
-- **Vite** for build tooling
-- **ESLint** for code quality
+- **Frontend Framework:** [React](https://reactjs.org/)
+- **Build Tool:** [Vite](https://vitejs.dev/)
+- **Styling:** Custom CSS with CSS Variables (Theming), [Lucide React](https://lucide.dev/) for icons.
+- **Charting:** [Chart.js](https://www.chartjs.org/) via `react-chartjs-2`.
+- **Routing:** [React Router](https://reactrouter.com/)
 
-## Getting Started
-
-### Prerequisites
-
-- Node.js 18+
-- npm
-
-### Installation
-
-```bash
-npm install
-```
-
-### Development
-
-```bash
-npm run dev
-```
-
-The application will be available at `http://localhost:3000`
-
-### Build
-
-```bash
-npm run build
-```
-
-### Lint
-
-```bash
-npm run lint
-```
-
-## Project Structure
+## 📂 Project Structure
 
 ```
 src/
-├── pages/          # Page components
-│   ├── Login.jsx
-│   ├── Register.jsx
-│   ├── Dashboard.jsx
-│   ├── CastVote.jsx
-│   └── Results.jsx
-├── components/     # Reusable components
-│   ├── Navbar.jsx
-│   └── ProtectedRoute.jsx
-├── App.jsx         # Main app component
-└── main.jsx        # Entry point
+├── features/           # Feature-based modules
+│   ├── auth/           # Authentication (Login, Register)
+│   ├── admin/          # Admin Dashboard & Management
+│   ├── voter/          # Voter Dashboard & Voting Interface
+│   ├── voting/         # Core Voting Logic & Components
+│   └── public/         # Landing Page & Public Routes
+├── shared/             # Shared utilities and components
+│   ├── components/     # Reusable UI components (Buttons, Inputs, etc.)
+│   ├── context/        # React Context (Auth, Theme)
+│   └── services/       # API services
+└── index.css           # Global styles & Theme variables
 ```
 
-## Environment Variables
+## 🎨 Theme & Customization
 
-Create a `.env` file:
+The application uses a **Cyber Aesthetic** theme defined in `src/index.css` via CSS variables.
 
-```
-VITE_API_URL=http://localhost:5000/api
-```
+- **Primary Color:** Neon Cyan (`#06b6d4`)
+- **Accent Color:** Violet (`#8b5cf6`)
+- **Background:** Deep Black (`#000000`)
 
-## Docker
+To customize the theme, edit the `:root` variables in `src/index.css`.
 
-Build and run with Docker:
+## 📦 Getting Started
 
-```bash
-docker build -t voting-frontend .
-docker run -p 3000:3000 voting-frontend
-```
+1.  **Clone the repository:**
 
-## Contributing
+    ```bash
+    git clone https://github.com/secure-voting-system/voting-frontend.git
+    cd voting-frontend
+    ```
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+2.  **Install dependencies:**
 
-## License
+    ```bash
+    npm install
+    ```
 
-MIT
+3.  **Run the development server:**
+
+    ```bash
+    npm run dev
+    ```
+
+4.  **Build for production:**
+    ```bash
+    npm run build
+    ```
+
+## 🤝 Contribution
+
+Contributions are welcome! Please fork the repository and submit a pull request.
+
+## 📄 License
+
+This project is licensed under the MIT License.

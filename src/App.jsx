@@ -1,79 +1,116 @@
 import React from 'react';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-import { DataProvider } from './context/DataContext';
-import ProtectedRoute from './components/ProtectedRoute';
-import AppShell from './components/AppShell';
-import Landing from './pages/Landing';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import VoterDashboard from './pages/VoterDashboard';
-import CastVote from './pages/CastVote';
-import ReceiptVerify from './pages/ReceiptVerify';
-import Results from './pages/Results';
-import AdminDashboard from './pages/AdminDashboard';
-import Elections from './pages/Elections';
-import Candidates from './pages/Candidates';
-import AuditorDashboard from './pages/AuditorDashboard';
-import AuditLogs from './pages/AuditLogs';
-import NotFound from './pages/NotFound';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './shared/context/AuthContext';
+import { DataProvider } from './shared/context/DataContext';
+import { ThemeProvider } from './shared/context/ThemeContext';
+import ProtectedRoute from './features/auth/ProtectedRoute';
+import AdminLayout from './features/admin/AdminLayout';
+
+// Public Pages
+import LandingPage from './features/public/LandingPage';
+import Login from './features/auth/Login';
+import Register from './features/auth/Register';
+
+// Voter Pages
+import VoterDashboard from './features/voter/VoterDashboard';
+import VotingPage from './features/voting/VotingPage';
+
+// Admin Pages
+import Dashboard from './features/admin/Dashboard';
+import ElectionManagement from './features/admin/ElectionManagement';
+import CandidateManagement from './features/admin/CandidateManagement';
+import VoterApproval from './features/admin/VoterApproval';
+import ElectionControl from './features/admin/ElectionControl';
 
 function App() {
   return (
-    <AuthProvider>
-      <DataProvider>
-        <BrowserRouter>
+    <ThemeProvider>
+      <AuthProvider>
+        <DataProvider>
+        <Router>
           <Routes>
-            <Route path="/" element={<Landing />} />
+            {/* Public Routes */}
+            <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
 
+            {/* Voter Routes */}
             <Route
-              path="/voter"
+              path="/voter/dashboard"
               element={
-                <ProtectedRoute roles={["VOTER", "ADMIN", "AUTHORITY", "AUDITOR"]}>
-                  <AppShell />
+                <ProtectedRoute>
+                  <VoterDashboard />
                 </ProtectedRoute>
               }
-            >
-              <Route index element={<Navigate to="/voter/dashboard" replace />} />
-              <Route path="dashboard" element={<VoterDashboard />} />
-              <Route path="vote/:electionId" element={<CastVote />} />
-              <Route path="verify" element={<ReceiptVerify />} />
-              <Route path="results" element={<Results />} />
-            </Route>
-
+            />
             <Route
-              path="/admin"
+              path="/voter/vote/:electionId"
               element={
-                <ProtectedRoute roles={["ADMIN", "AUTHORITY"]}>
-                  <AppShell />
+                <ProtectedRoute>
+                  <VotingPage />
                 </ProtectedRoute>
               }
-            >
-              <Route index element={<Navigate to="/admin/dashboard" replace />} />
-              <Route path="dashboard" element={<AdminDashboard />} />
-              <Route path="elections" element={<Elections />} />
-              <Route path="candidates" element={<Candidates />} />
-            </Route>
+            />
 
+            {/* Admin Routes */}
             <Route
-              path="/auditor"
+              path="/admin/dashboard"
               element={
-                <ProtectedRoute roles={["AUDITOR", "ADMIN"]}>
-                  <AppShell />
+                <ProtectedRoute requireAdmin>
+                  <AdminLayout>
+                    <Dashboard />
+                  </AdminLayout>
                 </ProtectedRoute>
               }
-            >
-              <Route index element={<AuditorDashboard />} />
-              <Route path="logs" element={<AuditLogs />} />
-            </Route>
+            />
+            <Route
+              path="/admin/elections"
+              element={
+                <ProtectedRoute requireAdmin>
+                  <AdminLayout>
+                    <ElectionManagement />
+                  </AdminLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/candidates"
+              element={
+                <ProtectedRoute requireAdmin>
+                  <AdminLayout>
+                    <CandidateManagement />
+                  </AdminLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/voters"
+              element={
+                <ProtectedRoute requireAdmin>
+                  <AdminLayout>
+                    <VoterApproval />
+                  </AdminLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/control"
+              element={
+                <ProtectedRoute requireAdmin>
+                  <AdminLayout>
+                    <ElectionControl />
+                  </AdminLayout>
+                </ProtectedRoute>
+              }
+            />
 
-            <Route path="*" element={<NotFound />} />
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </BrowserRouter>
+        </Router>
       </DataProvider>
     </AuthProvider>
+    </ThemeProvider>
   );
 }
 

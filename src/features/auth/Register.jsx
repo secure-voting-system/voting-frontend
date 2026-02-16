@@ -34,8 +34,6 @@ const Register = () => {
       // Redirect based on role
       if (result.user.role === 'admin') {
         navigate('/admin/dashboard');
-      } else if (result.user.role === 'auditor') {
-        navigate('/auditor/dashboard');
       } else {
         navigate('/voter/dashboard');
       }
@@ -60,9 +58,9 @@ const Register = () => {
         </div>
 
         {error && (
-          <div style={{
-            padding: '1rem',
-            background: 'rgba(239, 68, 68, 0.1)',
+          <div style={{ 
+            padding: '1rem', 
+            background: 'rgba(239, 68, 68, 0.1)', 
             border: '1px solid rgba(239, 68, 68, 0.2)',
             borderRadius: '0.75rem',
             marginBottom: '1.5rem',
@@ -185,11 +183,11 @@ const Register = () => {
             <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: 600, fontSize: '0.875rem' }}>
               Account Type
             </label>
-            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-              <label style={{
-                flex: 1, minWidth: '120px',
-                padding: '1rem',
-                borderRadius: '0.75rem',
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <label style={{ 
+                flex: 1, 
+                padding: '1rem', 
+                borderRadius: '0.75rem', 
                 border: formData.role === 'voter' ? '2px solid var(--primary)' : '1px solid var(--glass-border)',
                 background: formData.role === 'voter' ? 'rgba(99, 102, 241, 0.1)' : 'rgba(255,255,255,0.03)',
                 cursor: 'pointer',
@@ -211,10 +209,10 @@ const Register = () => {
                   </div>
                 </div>
               </label>
-              <label style={{
-                flex: 1, minWidth: '120px',
-                padding: '1rem',
-                borderRadius: '0.75rem',
+              <label style={{ 
+                flex: 1, 
+                padding: '1rem', 
+                borderRadius: '0.75rem', 
                 border: formData.role === 'admin' ? '2px solid var(--primary)' : '1px solid var(--glass-border)',
                 background: formData.role === 'admin' ? 'rgba(99, 102, 241, 0.1)' : 'rgba(255,255,255,0.03)',
                 cursor: 'pointer',
@@ -233,31 +231,6 @@ const Register = () => {
                   <div>
                     <div style={{ fontWeight: 700 }}>Admin</div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Manage elections</div>
-                  </div>
-                </div>
-              </label>
-              <label style={{
-                flex: 1, minWidth: '120px',
-                padding: '1rem',
-                borderRadius: '0.75rem',
-                border: formData.role === 'auditor' ? '2px solid var(--primary)' : '1px solid var(--glass-border)',
-                background: formData.role === 'auditor' ? 'rgba(99, 102, 241, 0.1)' : 'rgba(255,255,255,0.03)',
-                cursor: 'pointer',
-                transition: '0.3s'
-              }}>
-                <input
-                  type="radio"
-                  name="role"
-                  value="auditor"
-                  checked={formData.role === 'auditor'}
-                  onChange={handleChange}
-                  style={{ display: 'none' }}
-                />
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  {formData.role === 'auditor' && <CheckCircle2 size={20} color="var(--primary)" />}
-                  <div>
-                    <div style={{ fontWeight: 700 }}>Auditor</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Verify & audit</div>
                   </div>
                 </div>
               </label>

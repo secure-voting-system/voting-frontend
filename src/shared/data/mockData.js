@@ -1,6 +1,6 @@
 // Mock UUID generator (simple version without external dependency)
 const generateId = () => {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
     const r = Math.random() * 16 | 0;
     const v = c === 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
@@ -21,13 +21,6 @@ export const mockUsers = [
     password: 'voter123',
     role: 'voter',
     name: 'John Doe'
-  },
-  {
-    id: 'user-3',
-    email: 'auditor@vortex.com',
-    password: 'auditor123',
-    role: 'auditor',
-    name: 'Auditor User'
   }
 ];
 
@@ -137,21 +130,21 @@ export const mockPendingVoters = [
 
 // Initialize localStorage with mock data
 export const initializeMockData = () => {
-  const DATA_VERSION = 'v3-2026-auditor';
+  const DATA_VERSION = 'v2-2026-fix';
   const currentVersion = localStorage.getItem('vortex_data_version');
 
   // Force reset if version mismatch
   if (currentVersion !== DATA_VERSION) {
     localStorage.clear();
     localStorage.setItem('vortex_data_version', DATA_VERSION);
-
+    
     // Re-initialize all data
     localStorage.setItem('vortex_users', JSON.stringify(mockUsers));
     localStorage.setItem('vortex_elections', JSON.stringify(mockElections));
     localStorage.setItem('vortex_candidates', JSON.stringify(mockCandidates));
     localStorage.setItem('vortex_votes', JSON.stringify(mockVotes));
     localStorage.setItem('vortex_pending_voters', JSON.stringify(mockPendingVoters));
-
+    
     // Keep user logged in if possible (optional, but clearing everything is safer for consistency)
     // console.log('Mock data refreshed to version:', DATA_VERSION);
     return;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useData } from '../../shared/context/DataContext';
 import { UserPlus, Image as ImageIcon, Trash2, GripVertical, CheckCircle2, X } from 'lucide-react';
 
@@ -54,7 +54,7 @@ const CandidateCard = ({ candidate, onDelete }) => (
 );
 
 const CandidateManagement = () => {
-  const { candidates, elections, createCandidate, deleteCandidate } = useData();
+  const { candidates, elections, createCandidate, deleteCandidate, loadCandidatesForElection } = useData();
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -64,17 +64,27 @@ const CandidateManagement = () => {
     photo: ''
   });
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    createCandidate(formData);
-    setShowModal(false);
-    setFormData({
-      name: '',
-      role: '',
-      bio: '',
-      electionId: '',
-      photo: ''
+  useEffect(() => {
+    elections.forEach((election) => {
+      loadCandidatesForElection(election.id);
     });
+  }, [elections, loadCandidatesForElection]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await createCandidate(formData);
+      setShowModal(false);
+      setFormData({
+        name: '',
+        role: '',
+        bio: '',
+        electionId: '',
+        photo: ''
+      });
+    } catch (error) {
+      console.error('Failed to create candidate', error);
+    }
   };
 
   const handleChange = (e) => {

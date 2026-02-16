@@ -5,6 +5,7 @@ import { Plus, Calendar, Clock, Edit3, Trash2, Search, X } from 'lucide-react';
 const ElectionManagement = () => {
   const { elections, createElection, deleteElection } = useData();
   const [showModal, setShowModal] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -13,17 +14,23 @@ const ElectionManagement = () => {
     totalVoters: 100
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    createElection(formData);
-    setShowModal(false);
-    setFormData({
-      title: '',
-      description: '',
-      startDate: '',
-      endDate: '',
-      totalVoters: 100
-    });
+    setError('');
+    try {
+      await createElection(formData);
+      setShowModal(false);
+      setFormData({
+        title: '',
+        description: '',
+        startDate: '',
+        endDate: '',
+        totalVoters: 100
+      });
+    } catch (error) {
+      const message = error?.response?.data?.message || error?.message || 'Failed to create election';
+      setError(message);
+    }
   };
 
   const handleChange = (e) => {
@@ -124,7 +131,13 @@ const ElectionManagement = () => {
                         <Edit3 size={16} />
                       </button>
                       <button 
-                        onClick={() => deleteElection(election.id)}
+                        onClick={async () => {
+                          try {
+                            await deleteElection(election.id);
+                          } catch (error) {
+                            console.error('Failed to delete election:', error);
+                          }
+                        }}
                         style={{ 
                           padding: '0.5rem', 
                           borderRadius: '0.5rem', 
@@ -179,6 +192,19 @@ const ElectionManagement = () => {
             </button>
 
             <h2 style={{ marginBottom: '2rem' }}>Create New Election</h2>
+
+            {error && (
+              <div style={{ 
+                padding: '1rem', 
+                background: 'rgba(239, 68, 68, 0.1)', 
+                border: '1px solid rgba(239, 68, 68, 0.2)',
+                borderRadius: '0.75rem',
+                marginBottom: '1.5rem',
+                color: 'var(--danger)'
+              }}>
+                {error}
+              </div>
+            )}
 
             <form onSubmit={handleSubmit}>
               <div style={{ marginBottom: '1.5rem' }}>

@@ -5,7 +5,6 @@ import { DataProvider } from './shared/context/DataContext';
 import { ThemeProvider } from './shared/context/ThemeContext';
 import ProtectedRoute from './features/auth/ProtectedRoute';
 import AdminLayout from './features/admin/AdminLayout';
-import AuditorLayout from './features/auditor/AuditorLayout';
 
 // Public Pages
 import LandingPage from './features/public/LandingPage';
@@ -23,147 +22,98 @@ import CandidateManagement from './features/admin/CandidateManagement';
 import VoterApproval from './features/admin/VoterApproval';
 import ElectionControl from './features/admin/ElectionControl';
 
-// Results Page
-import ResultsDashboard from './features/results/ResultsDashboard';
-
-// Auditor Pages
-import AuditorDashboard from './features/auditor/AuditorDashboard';
-
-// System Monitor
-import SystemMonitor from './features/monitor/SystemMonitor';
-
 function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
         <DataProvider>
-          <Router>
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
+        <Router>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
 
-              {/* Voter Routes */}
-              <Route
-                path="/voter/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <VoterDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/voter/vote/:electionId"
-                element={
-                  <ProtectedRoute>
-                    <VotingPage />
-                  </ProtectedRoute>
-                }
-              />
+            {/* Voter Routes */}
+            <Route
+              path="/voter/dashboard"
+              element={
+                <ProtectedRoute>
+                  <VoterDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/voter/vote/:electionId"
+              element={
+                <ProtectedRoute>
+                  <VotingPage />
+                </ProtectedRoute>
+              }
+            />
 
-              {/* Admin Routes */}
-              <Route
-                path="/admin/dashboard"
-                element={
-                  <ProtectedRoute requireAdmin>
-                    <AdminLayout>
-                      <Dashboard />
-                    </AdminLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/elections"
-                element={
-                  <ProtectedRoute requireAdmin>
-                    <AdminLayout>
-                      <ElectionManagement />
-                    </AdminLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/candidates"
-                element={
-                  <ProtectedRoute requireAdmin>
-                    <AdminLayout>
-                      <CandidateManagement />
-                    </AdminLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/voters"
-                element={
-                  <ProtectedRoute requireAdmin>
-                    <AdminLayout>
-                      <VoterApproval />
-                    </AdminLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/control"
-                element={
-                  <ProtectedRoute requireAdmin>
-                    <AdminLayout>
-                      <ElectionControl />
-                    </AdminLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/results"
-                element={
-                  <ProtectedRoute requireAdmin>
-                    <AdminLayout>
-                      <ResultsDashboard />
-                    </AdminLayout>
-                  </ProtectedRoute>
-                }
-              />
+            {/* Admin Routes */}
+            <Route
+              path="/admin/dashboard"
+              element={
+                <ProtectedRoute requireAdmin>
+                  <AdminLayout>
+                    <Dashboard />
+                  </AdminLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/elections"
+              element={
+                <ProtectedRoute requireAdmin>
+                  <AdminLayout>
+                    <ElectionManagement />
+                  </AdminLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/candidates"
+              element={
+                <ProtectedRoute requireAdmin>
+                  <AdminLayout>
+                    <CandidateManagement />
+                  </AdminLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/voters"
+              element={
+                <ProtectedRoute requireAdmin>
+                  <AdminLayout>
+                    <VoterApproval />
+                  </AdminLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/control"
+              element={
+                <ProtectedRoute requireAdmin>
+                  <AdminLayout>
+                    <ElectionControl />
+                  </AdminLayout>
+                </ProtectedRoute>
+              }
+            />
 
-              {/* Auditor Routes */}
-              <Route
-                path="/auditor/dashboard"
-                element={
-                  <ProtectedRoute requireAuditor>
-                    <AuditorLayout>
-                      <AuditorDashboard />
-                    </AuditorLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/auditor/results"
-                element={
-                  <ProtectedRoute requireAuditor>
-                    <AuditorLayout>
-                      <ResultsDashboard />
-                    </AuditorLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/auditor/monitor"
-                element={
-                  <ProtectedRoute requireAuditor>
-                    <AuditorLayout>
-                      <SystemMonitor />
-                    </AuditorLayout>
-                  </ProtectedRoute>
-                }
-              />
-
-              {/* Fallback */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </Router>
-        </DataProvider>
-      </AuthProvider>
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Router>
+      </DataProvider>
+    </AuthProvider>
     </ThemeProvider>
   );
 }
 
 export default App;
+
+

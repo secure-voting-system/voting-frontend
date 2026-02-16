@@ -19,8 +19,6 @@ const Login = () => {
       // Redirect based on role
       if (result.user.role === 'admin') {
         navigate('/admin/dashboard');
-      } else if (result.user.role === 'auditor') {
-        navigate('/auditor/dashboard');
       } else {
         navigate('/voter/dashboard');
       }
@@ -38,9 +36,9 @@ const Login = () => {
         </div>
 
         {error && (
-          <div style={{
-            padding: '1rem',
-            background: 'rgba(239, 68, 68, 0.1)',
+          <div style={{ 
+            padding: '1rem', 
+            background: 'rgba(239, 68, 68, 0.1)', 
             border: '1px solid rgba(239, 68, 68, 0.2)',
             borderRadius: '0.75rem',
             marginBottom: '1.5rem',
@@ -128,8 +126,7 @@ const Login = () => {
           <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', fontWeight: 600 }}>Demo Credentials:</p>
           <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
             <strong>Admin:</strong> admin@vortex.com / admin123<br />
-            <strong>Voter:</strong> voter@vortex.com / voter123<br />
-            <strong>Auditor:</strong> auditor@vortex.com / auditor123
+            <strong>Voter:</strong> voter@vortex.com / voter123
           </p>
         </div>
       </div>

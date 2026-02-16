@@ -10,11 +10,11 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    const result = login(email, password);
+    const result = await login(email, password);
     if (result.success) {
       // Redirect based on role
       if (result.user.role === 'admin') {

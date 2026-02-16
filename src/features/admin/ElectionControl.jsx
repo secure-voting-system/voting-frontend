@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Play, Pause, Square, AlertOctagon, Activity, Radio, Lock, ShieldCheck } from 'lucide-react';
+import { useData } from '../../shared/context/DataContext';
+import { electionAPI } from '../../shared/services/api';
 
 const ControlCard = ({ title, icon: Icon, color, desc, danger, onClick }) => (
   <div className="card glass animate-fade-in" style={{ 
@@ -51,6 +53,57 @@ const ControlCard = ({ title, icon: Icon, color, desc, danger, onClick }) => (
 );
 
 const ElectionControl = () => {
+  const { elections } = useData();
+  const [loading, setLoading] = useState(false);
+  const [selectedPendingId, setSelectedPendingId] = useState('');
+  const [selectedActiveId, setSelectedActiveId] = useState('');
+
+  const pendingElections = elections.filter(e => e.status === 'pending');
+  const activeElections = elections.filter(e => e.status === 'active');
+
+  const resolvedPendingId = selectedPendingId || pendingElections[0]?.id;
+  const resolvedActiveId = selectedActiveId || activeElections[0]?.id;
+  const resolvedPending = pendingElections.find(e => e.id === resolvedPendingId) || pendingElections[0];
+  const resolvedActive = activeElections.find(e => e.id === resolvedActiveId) || activeElections[0];
+
+  const handleStartElection = async (electionId) => {
+    setLoading(true);
+    try {
+      await electionAPI.start(electionId);
+      alert('Election started successfully!');
+      window.location.reload();
+    } catch (error) {
+      alert('Failed to start election: ' + (error?.response?.data?.message || error.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePauseElection = async (electionId) => {
+    setLoading(true);
+    try {
+      await electionAPI.suspend(electionId, 'Paused by admin');
+      alert('Election paused successfully!');
+      window.location.reload();
+    } catch (error) {
+      alert('Failed to pause election: ' + (error?.response?.data?.message || error.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCloseElection = async (electionId) => {
+    setLoading(true);
+    try {
+      await electionAPI.close(electionId);
+      alert('Election closed successfully!');
+      window.location.reload();
+    } catch (error) {
+      alert('Failed to close election: ' + (error?.response?.data?.message || error.message));
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <div style={{ maxWidth: '1200px' }}>
       <header style={{ marginBottom: '3.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -78,36 +131,95 @@ const ElectionControl = () => {
         </div>
       </div>
 
+      {(pendingElections.length > 0 || activeElections.length > 0) && (
+        <div className="card glass" style={{ marginBottom: '2rem', padding: '1.5rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
+          {pendingElections.length > 0 && (
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
+                Pending Election
+              </label>
+              <select
+                value={resolvedPendingId || ''}
+                onChange={(e) => setSelectedPendingId(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 1rem',
+                  borderRadius: '0.75rem',
+                  border: '1px solid var(--glass-border)',
+                  background: 'rgba(255,255,255,0.03)',
+                  color: 'var(--text-primary)'
+                }}
+              >
+                {pendingElections.map((election) => (
+                  <option key={election.id} value={election.id}>
+                    {election.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {activeElections.length > 0 && (
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
+                Active Election
+              </label>
+              <select
+                value={resolvedActiveId || ''}
+                onChange={(e) => setSelectedActiveId(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 1rem',
+                  borderRadius: '0.75rem',
+                  border: '1px solid var(--glass-border)',
+                  background: 'rgba(255,255,255,0.03)',
+                  color: 'var(--text-primary)'
+                }}
+              >
+                {activeElections.map((election) => (
+                  <option key={election.id} value={election.id}>
+                    {election.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem' }}>
-        <ControlCard 
-          title="Start Voting" 
-          icon={Play} 
-          color="16, 185, 129" 
-          desc="Initialize secure voting shards and broadcast access keys to all verified voters."
-          onClick={() => alert('Starting voting session...')}
-        />
-        <ControlCard 
-          title="Pause Cluster" 
-          icon={Pause} 
-          color="245, 158, 11" 
-          desc="Temporarily suspend protocol submissions to perform elective security maintenance."
-          onClick={() => alert('Pausing cluster...')}
-        />
-        <ControlCard 
-          title="Archive Ballots" 
-          icon={Square} 
-          color="148, 163, 184" 
-          desc="Cease activity and begin the decentralized tallying sequence. Final and irreversible."
-          onClick={() => alert('Archiving ballots...')}
-        />
-        <ControlCard 
-          title="Emergency Scram" 
-          icon={AlertOctagon} 
-          color="239, 68, 68" 
-          desc="Immediate severance of all node links. Purge volatile session keys."
-          danger
-          onClick={() => confirm('Are you sure? This will immediately halt all voting!') && alert('Emergency scram initiated!')}
-        />
+        {pendingElections.length > 0 && resolvedPending && (
+          <ControlCard 
+            title="Start Voting" 
+            icon={Play} 
+            color="16, 185, 129" 
+            desc={`Start voting for: ${resolvedPending.title}`}
+            onClick={() => handleStartElection(resolvedPending.id)}
+          />
+        )}
+        {activeElections.length > 0 && resolvedActive && (
+          <>
+            <ControlCard 
+              title="Pause Voting" 
+              icon={Pause} 
+              color="245, 158, 11" 
+              desc={`Temporarily pause: ${resolvedActive.title}`}
+              onClick={() => handlePauseElection(resolvedActive.id)}
+            />
+            <ControlCard 
+              title="Close Election" 
+              icon={Square} 
+              color="148, 163, 184" 
+              desc={`End voting for: ${resolvedActive.title}`}
+              onClick={() => handleCloseElection(resolvedActive.id)}
+            />
+          </>
+        )}
+        {pendingElections.length === 0 && activeElections.length === 0 && (
+          <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
+            No elections available. Create one first in Election Management.
+          </div>
+        )}
       </div>
     </div>
   );

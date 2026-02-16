@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { generateId } from '../data/mockData';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { electionAPI, candidateAPI, voteAPI } from '../services/api';
 
 const DataContext = createContext();
 
@@ -17,120 +17,194 @@ export const DataProvider = ({ children }) => {
   const [votes, setVotes] = useState([]);
   const [pendingVoters, setPendingVoters] = useState([]);
 
-  // Load data from localStorage on mount
-  useEffect(() => {
-    const loadedElections = JSON.parse(localStorage.getItem('vortex_elections') || '[]');
-    const loadedCandidates = JSON.parse(localStorage.getItem('vortex_candidates') || '[]');
-    const loadedVotes = JSON.parse(localStorage.getItem('vortex_votes') || '[]');
-    const loadedPending = JSON.parse(localStorage.getItem('vortex_pending_voters') || '[]');
+  const normalizeElection = (election) => {
+    if (!election) return null;
 
-    setElections(loadedElections);
-    setCandidates(loadedCandidates);
-    setVotes(loadedVotes);
-    setPendingVoters(loadedPending);
+    const toDateString = (value) => {
+      if (!value) return '';
+      if (typeof value === 'number') {
+        return new Date(value * 1000).toISOString();
+      }
+      return new Date(value).toISOString();
+    };
+
+    return {
+      id: election.electionId || election.id,
+      title: election.name || election.title,
+      description: election.description || '',
+      startDate: toDateString(election.startTime || election.startDate),
+      endDate: toDateString(election.endTime || election.endDate),
+      status: election.status || 'pending',
+      totalVoters: Number.isFinite(election.totalVoters) ? election.totalVoters : 100,
+      votedCount: Number.isFinite(election.votedCount) ? election.votedCount : 0,
+      raw: election,
+    };
+  };
+
+  const normalizeCandidate = (candidate) => {
+    if (!candidate) return null;
+    return {
+      id: candidate.candidateId || candidate.id,
+      electionId: candidate.electionId,
+      name: candidate.name,
+      role: candidate.party || candidate.role || '',
+      bio: candidate.bio || '',
+      photo: candidate.photo || '',
+    };
+  };
+
+  // Load data from API on mount
+  useEffect(() => {
+    const loadInitial = async () => {
+      try {
+        const [electionsResponse] = await Promise.all([
+          electionAPI.getAll(),
+        ]);
+
+        const normalized = (Array.isArray(electionsResponse) ? electionsResponse : electionsResponse?.elections || [])
+          .map(normalizeElection)
+          .filter(Boolean);
+
+        setElections(normalized);
+      } catch (error) {
+        console.error('Failed to load elections', error);
+      }
+
+      const storedVotes = JSON.parse(localStorage.getItem('vortex_votes') || '[]');
+      setVotes(storedVotes);
+    };
+
+    loadInitial();
   }, []);
 
   // Elections
-  const createElection = (electionData) => {
-    const newElection = {
-      id: generateId(),
-      ...electionData,
-      status: 'pending',
-      totalVoters: 0,
-      votedCount: 0
+  const createElection = async (electionData) => {
+    const payload = {
+      electionId: electionData.id,
+      name: electionData.title,
+      description: electionData.description,
+      startTime: electionData.startDate,
+      endTime: electionData.endDate,
     };
-    const updated = [...elections, newElection];
-    setElections(updated);
-    localStorage.setItem('vortex_elections', JSON.stringify(updated));
-    return newElection;
+
+    const created = await electionAPI.create(payload);
+    const normalized = normalizeElection(created);
+    setElections((prev) => [...prev, normalized]);
+    return normalized;
   };
 
   const updateElection = (id, updates) => {
-    const updated = elections.map(e => e.id === id ? { ...e, ...updates } : e);
-    setElections(updated);
-    localStorage.setItem('vortex_elections', JSON.stringify(updated));
+    setElections((prev) => prev.map(e => e.id === id ? { ...e, ...updates } : e));
   };
 
-  const deleteElection = (id) => {
-    const updated = elections.filter(e => e.id !== id);
-    setElections(updated);
-    localStorage.setItem('vortex_elections', JSON.stringify(updated));
+  const deleteElection = async (id) => {
+    try {
+      await electionAPI.delete(id);
+      setElections((prev) => prev.filter(e => e.id !== id));
+    } catch (error) {
+      console.error('Failed to delete election', error);
+      throw error;
+    }
   };
 
   // Candidates
-  const createCandidate = (candidateData) => {
-    const newCandidate = {
-      id: generateId(),
-      ...candidateData,
-      votes: 0
+  const createCandidate = async (candidateData) => {
+    const candidateId = candidateData.id || `candidate-${Date.now()}`;
+    const payload = {
+      candidateId,
+      name: candidateData.name,
+      party: candidateData.role,
     };
-    const updated = [...candidates, newCandidate];
-    setCandidates(updated);
-    localStorage.setItem('vortex_candidates', JSON.stringify(updated));
-    return newCandidate;
+
+    const created = await candidateAPI.create(candidateData.electionId, payload);
+    const normalized = normalizeCandidate({ ...created, electionId: candidateData.electionId });
+    setCandidates((prev) => [...prev, normalized]);
+    return normalized;
   };
 
   const updateCandidate = (id, updates) => {
-    const updated = candidates.map(c => c.id === id ? { ...c, ...updates } : c);
-    setCandidates(updated);
-    localStorage.setItem('vortex_candidates', JSON.stringify(updated));
+    setCandidates((prev) => prev.map(c => c.id === id ? { ...c, ...updates } : c));
   };
 
   const deleteCandidate = (id) => {
-    const updated = candidates.filter(c => c.id !== id);
-    setCandidates(updated);
-    localStorage.setItem('vortex_candidates', JSON.stringify(updated));
+    setCandidates((prev) => prev.filter(c => c.id !== id));
   };
 
   const getCandidatesByElection = (electionId) => {
     return candidates.filter(c => c.electionId === electionId);
   };
 
-  // Votes
-  const submitVote = (userId, electionId, candidateId) => {
-    // Check if user already voted
-    const existingVote = votes.find(v => v.userId === userId && v.electionId === electionId);
-    if (existingVote) {
-      return { success: false, error: 'Already voted in this election' };
+  const loadCandidatesForElection = useCallback(async (electionId) => {
+    try {
+      const fetched = await candidateAPI.getByElection(electionId);
+      const normalized = (Array.isArray(fetched) ? fetched : [])
+        .map((candidate) => normalizeCandidate({ ...candidate, electionId }))
+        .filter(Boolean);
+
+      setCandidates((prev) => {
+        const filtered = prev.filter(c => c.electionId !== electionId);
+        return [...filtered, ...normalized];
+      });
+    } catch (error) {
+      console.error('Failed to load candidates', error);
     }
+  }, []);
 
-    const receiptId = `VOTE-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-    const newVote = {
-      id: generateId(),
-      userId,
-      electionId,
-      candidateId,
-      timestamp: new Date().toISOString(),
-      receiptId
-    };
+  // Votes
+  const submitVote = async (userId, electionId, candidateId) => {
+    try {
+      const existingVote = votes.find(v => v.userId === userId && v.electionId === electionId);
+      if (existingVote) {
+        return { success: false, error: 'Already voted in this election' };
+      }
 
-    const updatedVotes = [...votes, newVote];
-    setVotes(updatedVotes);
-    localStorage.setItem('vortex_votes', JSON.stringify(updatedVotes));
+      const result = await voteAPI.cast(electionId, candidateId);
+      const receiptId =
+        result?.receipt?.receiptId ||
+        result?.receipt?.ReceiptID ||
+        result?.receipt ||
+        '';
 
-    // Update candidate vote count
-    const updatedCandidates = candidates.map(c => 
-      c.id === candidateId ? { ...c, votes: (c.votes || 0) + 1 } : c
-    );
-    setCandidates(updatedCandidates);
-    localStorage.setItem('vortex_candidates', JSON.stringify(updatedCandidates));
+      const newVote = {
+        id: result.voteId || `vote-${Date.now()}`,
+        userId,
+        electionId,
+        candidateId,
+        timestamp: new Date().toISOString(),
+        receiptId,
+      };
 
-    // Update election voted count
-    const updatedElections = elections.map(e => 
-      e.id === electionId ? { ...e, votedCount: (e.votedCount || 0) + 1 } : e
-    );
-    setElections(updatedElections);
-    localStorage.setItem('vortex_elections', JSON.stringify(updatedElections));
+      setVotes((prev) => {
+        const updated = [...prev, newVote];
+        localStorage.setItem('vortex_votes', JSON.stringify(updated));
+        return updated;
+      });
 
-    return { success: true, vote: newVote };
+      setElections((prev) => prev.map(e =>
+        e.id === electionId ? { ...e, votedCount: (e.votedCount || 0) + 1 } : e
+      ));
+
+      return { success: true, vote: newVote };
+    } catch (error) {
+      const message = error?.response?.data?.message || 'Failed to cast vote';
+      return { success: false, error: message };
+    }
   };
 
   const getUserVotes = (userId) => {
     return votes.filter(v => v.userId === userId);
   };
 
-  const getVoteByReceipt = (receiptId) => {
-    return votes.find(v => v.receiptId === receiptId);
+  const getVoteByReceipt = async (receiptId) => {
+    const localVote = votes.find(v => v.receiptId === receiptId);
+    if (localVote) return localVote;
+
+    try {
+      const result = await voteAPI.verifyReceipt(receiptId);
+      return result?.receipt ? { receiptId, ...result.receipt } : null;
+    } catch (error) {
+      return null;
+    }
   };
 
   const hasUserVoted = (userId, electionId) => {
@@ -141,13 +215,11 @@ export const DataProvider = ({ children }) => {
   const approveVoter = (voterId) => {
     const updated = pendingVoters.filter(v => v.id !== voterId);
     setPendingVoters(updated);
-    localStorage.setItem('vortex_pending_voters', JSON.stringify(updated));
   };
 
   const rejectVoter = (voterId) => {
     const updated = pendingVoters.filter(v => v.id !== voterId);
     setPendingVoters(updated);
-    localStorage.setItem('vortex_pending_voters', JSON.stringify(updated));
   };
 
   const value = {
@@ -162,6 +234,7 @@ export const DataProvider = ({ children }) => {
     updateCandidate,
     deleteCandidate,
     getCandidatesByElection,
+    loadCandidatesForElection,
     submitVote,
     getUserVotes,
     getVoteByReceipt,

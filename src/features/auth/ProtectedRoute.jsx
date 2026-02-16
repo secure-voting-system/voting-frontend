@@ -2,15 +2,15 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../shared/context/AuthContext';
 
-const ProtectedRoute = ({ children, requireAdmin = false }) => {
+const ProtectedRoute = ({ children, requireAdmin = false, requireAuditor = false }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
         minHeight: '100vh',
         background: 'var(--bg-deep)'
       }}>
@@ -24,6 +24,10 @@ const ProtectedRoute = ({ children, requireAdmin = false }) => {
   }
 
   if (requireAdmin && user.role !== 'admin') {
+    return <Navigate to="/voter/dashboard" replace />;
+  }
+
+  if (requireAuditor && user.role !== 'auditor') {
     return <Navigate to="/voter/dashboard" replace />;
   }
 

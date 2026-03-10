@@ -12,10 +12,22 @@ const VoterDashboard = () => {
   const [receiptSearch, setReceiptSearch] = useState('');
   const [searchResult, setSearchResult] = useState(null);
 
-  const userVotes = getUserVotes(user.id);
+  const userId = user?.id || user?.voterId;
+  const userVotes = userId ? getUserVotes(userId) : [];
 
-  const handleReceiptSearch = () => {
-    const vote = getVoteByReceipt(receiptSearch);
+  if (!userId) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="card glass" style={{ padding: '2.5rem', textAlign: 'center' }}>
+          <h2>Session not ready</h2>
+          <p style={{ color: 'var(--text-secondary)' }}>Please log in again to load your dashboard.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const handleReceiptSearch = async () => {
+    const vote = await getVoteByReceipt(receiptSearch);
     setSearchResult(vote || 'not_found');
   };
 
@@ -181,7 +193,7 @@ const VoterDashboard = () => {
             <h2 style={{ fontSize: '1.75rem', marginBottom: '1.5rem' }}>Active Elections</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.5rem' }}>
               {activeElections.map((election, index) => {
-                const voted = hasUserVoted(user.id, election.id);
+                const voted = hasUserVoted(userId, election.id);
                 return (
                   <div key={election.id} className="card glass animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
                     <div style={{ marginBottom: '1rem' }}>

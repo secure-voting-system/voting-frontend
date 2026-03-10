@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../shared/context/AuthContext';
 import { useData } from '../../shared/context/DataContext';
@@ -8,11 +8,18 @@ const VotingPage = () => {
   const { electionId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { elections, getCandidatesByElection, submitVote, hasUserVoted } = useData();
+  const { elections, getCandidatesByElection, loadCandidatesForElection, submitVote, hasUserVoted } = useData();
   
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [showReceipt, setShowReceipt] = useState(false);
   const [voteReceipt, setVoteReceipt] = useState(null);
+  const [submitError, setSubmitError] = useState('');
+
+  useEffect(() => {
+    if (electionId) {
+      loadCandidatesForElection(electionId);
+    }
+  }, [electionId, loadCandidatesForElection]);
 
   const election = elections.find(e => e.id === electionId);
   const candidates = getCandidatesByElection(electionId);
@@ -31,14 +38,18 @@ const VotingPage = () => {
     );
   }
 
-  const handleSubmitVote = () => {
+  const handleSubmitVote = async () => {
     if (!selectedCandidate) return;
 
-    const result = submitVote(user.id, electionId, selectedCandidate);
+    setSubmitError('');
+    const result = await submitVote(user.id, electionId, selectedCandidate);
     if (result.success) {
       setVoteReceipt(result.vote);
       setShowReceipt(true);
+      return;
     }
+
+    setSubmitError(result.error || 'Failed to cast vote');
   };
 
   if (showReceipt && voteReceipt) {
@@ -157,71 +168,94 @@ const VotingPage = () => {
 
         {/* Candidates */}
         <h2 style={{ fontSize: '1.75rem', marginBottom: '1.5rem' }}>Select Your Candidate</h2>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginBottom: '2.5rem' }}>
-          {candidates.map((candidate, index) => (
-            <div
-              key={candidate.id}
-              onClick={() => setSelectedCandidate(candidate.id)}
-              className="card glass animate-fade-in"
-              style={{
-                padding: '1.5rem',
-                cursor: 'pointer',
-                border: selectedCandidate === candidate.id ? '2px solid var(--primary)' : '1px solid var(--glass-border)',
-                background: selectedCandidate === candidate.id ? 'rgba(99, 102, 241, 0.1)' : 'var(--glass-bg)',
-                animationDelay: `${index * 0.1}s`
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                <div style={{
-                  width: '20px',
-                  height: '20px',
-                  borderRadius: '50%',
-                  border: `2px solid ${selectedCandidate === candidate.id ? 'var(--primary)' : 'var(--glass-border)'}`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0
-                }}>
+        {candidates.length === 0 ? (
+          <div className="card glass" style={{ padding: '2rem', textAlign: 'center', marginBottom: '2.5rem' }}>
+            <p style={{ color: 'var(--text-secondary)' }}>
+              No candidates found for this election yet. Please ask an admin to add candidates.
+            </p>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginBottom: '2.5rem' }}>
+            {candidates.map((candidate, index) => (
+              <div
+                key={candidate.id}
+                onClick={() => setSelectedCandidate(candidate.id)}
+                className="card glass animate-fade-in"
+                style={{
+                  padding: '1.5rem',
+                  cursor: 'pointer',
+                  border: selectedCandidate === candidate.id ? '2px solid var(--primary)' : '1px solid var(--glass-border)',
+                  background: selectedCandidate === candidate.id ? 'rgba(99, 102, 241, 0.1)' : 'var(--glass-bg)',
+                  animationDelay: `${index * 0.1}s`
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                  <div style={{
+                    width: '20px',
+                    height: '20px',
+                    borderRadius: '50%',
+                    border: `2px solid ${selectedCandidate === candidate.id ? 'var(--primary)' : 'var(--glass-border)'}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0
+                  }}>
+                    {selectedCandidate === candidate.id && (
+                      <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'var(--primary)' }}></div>
+                    )}
+                  </div>
+
+                  <div style={{
+                    width: '64px',
+                    height: '64px',
+                    borderRadius: '1rem',
+                    background: 'rgba(255,255,255,0.03)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: '1px solid var(--glass-border)',
+                    flexShrink: 0
+                  }}>
+                    {candidate.photo ? (
+                      <img src={candidate.photo} alt={candidate.name} style={{ width: '100%', height: '100%', borderRadius: '1rem', objectFit: 'cover' }} />
+                    ) : (
+                      <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary)' }}>
+                        {candidate.name.charAt(0)}
+                      </span>
+                    )}
+                  </div>
+
+                  <div style={{ flex: 1 }}>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.25rem' }}>{candidate.name}</h3>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>{candidate.role}</p>
+                    {candidate.bio && (
+                      <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', lineHeight: 1.5 }}>{candidate.bio}</p>
+                    )}
+                  </div>
+
                   {selectedCandidate === candidate.id && (
-                    <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'var(--primary)' }}></div>
+                    <CheckCircle2 size={32} color="var(--primary)" />
                   )}
                 </div>
-
-                <div style={{
-                  width: '64px',
-                  height: '64px',
-                  borderRadius: '1rem',
-                  background: 'rgba(255,255,255,0.03)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  border: '1px solid var(--glass-border)',
-                  flexShrink: 0
-                }}>
-                  {candidate.photo ? (
-                    <img src={candidate.photo} alt={candidate.name} style={{ width: '100%', height: '100%', borderRadius: '1rem', objectFit: 'cover' }} />
-                  ) : (
-                    <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary)' }}>
-                      {candidate.name.charAt(0)}
-                    </span>
-                  )}
-                </div>
-
-                <div style={{ flex: 1 }}>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.25rem' }}>{candidate.name}</h3>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>{candidate.role}</p>
-                  {candidate.bio && (
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', lineHeight: 1.5 }}>{candidate.bio}</p>
-                  )}
-                </div>
-
-                {selectedCandidate === candidate.id && (
-                  <CheckCircle2 size={32} color="var(--primary)" />
-                )}
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
+
+        {submitError && (
+          <div
+            className="card glass"
+            style={{
+              padding: '1rem 1.25rem',
+              marginBottom: '1.5rem',
+              border: '1px solid rgba(239, 68, 68, 0.35)',
+              background: 'rgba(239, 68, 68, 0.12)',
+              color: 'var(--danger)'
+            }}
+          >
+            {submitError}
+          </div>
+        )}
 
         {/* Submit Button */}
         <button

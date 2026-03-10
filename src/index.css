@@ -434,6 +434,7 @@ body::before {
     radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.08) 0%, transparent 70%);
   background-size: 50px 50px, 50px 50px, 100% 100%;
   z-index: -1;
+  pointer-events: none;
 }
 
 /* Custom Scrollbar */
@@ -468,6 +469,7 @@ body::before {
   height: 100%;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
   transition: 0.5s;
+  pointer-events: none;
 }
 
 .card:hover {

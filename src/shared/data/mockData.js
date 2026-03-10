@@ -10,17 +10,24 @@ const generateId = () => {
 export const mockUsers = [
   {
     id: 'user-1',
-    email: 'admin@vortex.com',
+    email: 'admin@gmail.com',
     password: 'admin123', // In real app, this would be hashed
     role: 'admin',
     name: 'Admin User'
   },
   {
     id: 'user-2',
-    email: 'voter@vortex.com',
+    email: 'voter@gmail.com',
     password: 'voter123',
     role: 'voter',
     name: 'John Doe'
+  },
+  {
+    id: 'user-3',
+    email: 'auditor@gmail.com',
+    password: 'auditor123',
+    role: 'auditor',
+    name: 'System Auditor'
   }
 ];
 
@@ -128,9 +135,28 @@ export const mockPendingVoters = [
   }
 ];
 
+export const mockAuditLogs = [
+  {
+    id: 'log-1',
+    timestamp: getRelativeDate(-2),
+    action: 'ELECTION_CREATED',
+    entityId: 'election-1',
+    details: 'Student Council 2026 election created by admin',
+    actor: 'admin@gmail.com'
+  },
+  {
+    id: 'log-2',
+    timestamp: getRelativeDate(-1),
+    action: 'VOTE_CAST',
+    entityId: 'election-1',
+    details: 'Vote cast securely. Receipt ID generated.',
+    actor: 'System'
+  }
+];
+
 // Initialize localStorage with mock data
 export const initializeMockData = () => {
-  const DATA_VERSION = 'v2-2026-fix';
+  const DATA_VERSION = 'v2-2026-fix-2';
   const currentVersion = localStorage.getItem('vortex_data_version');
 
   // Force reset if version mismatch
@@ -144,6 +170,7 @@ export const initializeMockData = () => {
     localStorage.setItem('vortex_candidates', JSON.stringify(mockCandidates));
     localStorage.setItem('vortex_votes', JSON.stringify(mockVotes));
     localStorage.setItem('vortex_pending_voters', JSON.stringify(mockPendingVoters));
+    localStorage.setItem('vortex_audit_logs', JSON.stringify(mockAuditLogs));
     
     // Keep user logged in if possible (optional, but clearing everything is safer for consistency)
     // console.log('Mock data refreshed to version:', DATA_VERSION);
@@ -165,6 +192,9 @@ export const initializeMockData = () => {
   }
   if (!localStorage.getItem('vortex_pending_voters')) {
     localStorage.setItem('vortex_pending_voters', JSON.stringify(mockPendingVoters));
+  }
+  if (!localStorage.getItem('vortex_audit_logs')) {
+    localStorage.setItem('vortex_audit_logs', JSON.stringify(mockAuditLogs));
   }
 };
 

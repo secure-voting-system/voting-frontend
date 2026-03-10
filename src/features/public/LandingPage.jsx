@@ -7,6 +7,10 @@ import {
   Lock,
   ArrowRight,
   CheckCircle2,
+  Users,
+  Database,
+  Activity,
+  Award
 } from "lucide-react";
 import ThemeToggle from "../../shared/components/ThemeToggle";
 import "./LandingPage.css";
@@ -56,12 +60,7 @@ const LandingPage = () => {
       {/* Hero Section */}
       <section className="hero-section">
         <div className="hero-content">
-          <div className="animate-fade-in trust-badge-container">
-            <div className="trust-badge">
-              <CheckCircle2 size={16} color="var(--primary)" />
-              <span className="trust-text">Trusted by 50+ Organizations</span>
-            </div>
-          </div>
+
 
           <h1 className="animate-fade-in hero-title">
             Democracy in Every Vote
@@ -76,16 +75,34 @@ const LandingPage = () => {
 
           <div className="animate-fade-in hero-actions">
             <Link to="/register">
-              <button className="btn-premium btn-large">
+              <button className="btn-premium btn-large" style={{ background: 'linear-gradient(135deg, #06b6d4, #8b5cf6)', padding: '1.25rem 2.5rem', fontSize: '1.25rem' }}>
                 Start Voting <ArrowRight size={20} />
               </button>
             </Link>
             <Link to="/login">
-              <button className="sidebar-item btn-large">
+              <button className="sidebar-item btn-large hover-glow" style={{ border: '1px solid var(--glass-border)', padding: '1.25rem 2.5rem', margin: 0 }}>
                 View Demo
               </button>
             </Link>
           </div>
+        </div>
+      </section>
+
+      {/* Live Network Stats */}
+      <section style={{ padding: '0 2rem 4rem', marginTop: '-3rem', position: 'relative', zIndex: 10 }}>
+        <div style={{ maxWidth: '1000px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+           <div className="card glass animate-fade-in" style={{ padding: '2rem', textAlign: 'center', borderTop: '2px solid var(--primary)' }}>
+             <div className="stat-glow" style={{ fontSize: '3rem', marginBottom: '0.25rem' }}>142k+</div>
+             <p style={{ color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.85rem', fontWeight: 700 }}>VERIFIED VOTERS</p>
+           </div>
+           <div className="card glass animate-fade-in" style={{ padding: '2rem', textAlign: 'center', borderTop: '2px solid var(--accent)', animationDelay: '0.1s' }}>
+             <div className="stat-glow" style={{ fontSize: '3rem', marginBottom: '0.25rem' }}>9,840</div>
+             <p style={{ color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.85rem', fontWeight: 700 }}>ACTIVE ELECTIONS</p>
+           </div>
+           <div className="card glass animate-fade-in" style={{ padding: '2rem', textAlign: 'center', borderTop: '2px solid #10b981', animationDelay: '0.2s' }}>
+             <div className="stat-glow" style={{ fontSize: '3rem', marginBottom: '0.25rem', color: '#10b981', background: 'none', WebkitTextFillColor: '#10b981' }}>100%</div>
+             <p style={{ color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.85rem', fontWeight: 700 }}>SYSTEM UPTIME</p>
+           </div>
         </div>
       </section>
 
@@ -107,6 +124,30 @@ const LandingPage = () => {
                 <p className="feature-description">{feature.description}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How it Works Section */}
+      <section className="features-section" style={{ background: 'transparent', paddingBottom: '2rem' }}>
+        <div className="section-container">
+          <h2 className="section-title">How It Works</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem', position: 'relative' }}>
+            <div className="card glass animate-fade-in step-card">
+               <div className="step-number">01</div>
+               <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Register Identity</h3>
+               <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>Create a secure profile that separates your true identity from your ballot.</p>
+            </div>
+            <div className="card glass animate-fade-in step-card" style={{ animationDelay: '0.1s' }}>
+               <div className="step-number">02</div>
+               <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Navigate & Select</h3>
+               <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>Review candidate manifestos and securely register your preference.</p>
+            </div>
+            <div className="card glass animate-fade-in step-card" style={{ animationDelay: '0.2s' }}>
+               <div className="step-number">03</div>
+               <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Cryptographic Proof</h3>
+               <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>Receive an immutable receipt hash to verify your vote in the public ledger.</p>
+            </div>
           </div>
         </div>
       </section>

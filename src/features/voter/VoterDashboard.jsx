@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../shared/context/AuthContext';
 import { useData } from '../../shared/context/DataContext';
 import ThemeToggle from '../../shared/components/ThemeToggle';
-import { Vote, CheckCircle2, Clock, XCircle, Search, Receipt, LogOut } from 'lucide-react';
+import { Vote, CheckCircle2, Clock, XCircle, Search, ArrowRight, BarChart2, Receipt, LogOut } from 'lucide-react';
 
 const VoterDashboard = () => {
   const { user, logout } = useAuth();
   const { elections, getUserVotes, hasUserVoted, getVoteByReceipt } = useData();
+  const navigate = useNavigate();
   const [receiptSearch, setReceiptSearch] = useState('');
   const [searchResult, setSearchResult] = useState(null);
 
@@ -30,7 +31,6 @@ const VoterDashboard = () => {
 
   const activeElections = elections.filter(e => getElectionStatus(e) === 'active');
   const upcomingElections = elections.filter(e => getElectionStatus(e) === 'upcoming');
-  const closedElections = elections.filter(e => getElectionStatus(e) === 'closed');
 
   return (
     <div style={{ minHeight: '100vh', padding: '2rem' }}>
@@ -115,46 +115,64 @@ const VoterDashboard = () => {
           </div>
         </div>
 
-        {/* Receipt Lookup */}
-        <div className="card glass animate-fade-in" style={{ marginBottom: '3rem', padding: '2rem' }}>
-          <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <Receipt size={24} /> Receipt Lookup
-          </h2>
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <input
-              type="text"
-              value={receiptSearch}
-              onChange={(e) => setReceiptSearch(e.target.value)}
-              placeholder="Enter receipt ID (e.g., VOTE-2024-XXXXX)"
-              style={{
-                flex: 1,
-                padding: '0.875rem 1rem',
-                borderRadius: '0.75rem',
-                border: '1px solid var(--glass-border)',
-                background: 'rgba(255,255,255,0.03)',
-                color: 'var(--text-primary)',
-                fontSize: '1rem'
-              }}
-            />
-            <button onClick={handleReceiptSearch} className="btn-premium">
-              <Search size={20} /> Search
+        {/* Receipt Lookup & Election Results */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
+          <div className="card glass animate-fade-in" style={{ padding: '2rem' }}>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <Receipt size={24} color="#ec4899" /> Receipt Lookup
+            </h2>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <input
+                type="text"
+                value={receiptSearch}
+                onChange={(e) => setReceiptSearch(e.target.value)}
+                placeholder="Enter receipt ID (VOTE-...)"
+                style={{
+                  flex: 1,
+                  padding: '0.875rem 1rem',
+                  borderRadius: '0.75rem',
+                  border: '1px solid var(--glass-border)',
+                  background: 'rgba(255,255,255,0.03)',
+                  color: 'var(--text-primary)',
+                  fontSize: '1rem'
+                }}
+              />
+              <button onClick={handleReceiptSearch} className="btn-premium">
+                <Search size={20} />
+              </button>
+            </div>
+            {searchResult && (
+              <div style={{ marginTop: '1rem', padding: '1rem', borderRadius: '0.75rem', background: searchResult === 'not_found' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)', border: `1px solid ${searchResult === 'not_found' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)'}` }}>
+                {searchResult === 'not_found' ? (
+                  <p style={{ color: 'var(--danger)' }}>Receipt not found in ledger</p>
+                ) : (
+                  <div>
+                    <p style={{ color: 'var(--success)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem' }}><CheckCircle2 size={16} /> Vote Verified</p>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.5rem', fontFamily: 'monospace' }}>
+                      Ref: {searchResult.receiptId}<br />
+                      Time: {new Date(searchResult.timestamp).toLocaleString()}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          
+          <div className="card glass animate-fade-in" style={{ animationDelay: '0.2s', padding: '2rem' }}>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <BarChart2 size={24} color="var(--primary)" /> Election Results
+            </h2>
+            <p style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+              Access cryptographic proofs and real-time visualization of current and completed election results.
+            </p>
+            <button 
+              onClick={() => navigate('/results')} 
+              className="btn-premium" 
+              style={{ width: '100%', justifyContent: 'center' }}
+            >
+               View Results <ArrowRight size={20} style={{ marginLeft: '0.5rem' }} />
             </button>
           </div>
-          {searchResult && (
-            <div style={{ marginTop: '1rem', padding: '1rem', borderRadius: '0.75rem', background: searchResult === 'not_found' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)', border: `1px solid ${searchResult === 'not_found' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)'}` }}>
-              {searchResult === 'not_found' ? (
-                <p style={{ color: 'var(--danger)' }}>Receipt not found</p>
-              ) : (
-                <div>
-                  <p style={{ color: 'var(--success)', fontWeight: 600 }}>✓ Vote Verified</p>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '0.5rem' }}>
-                    Receipt ID: {searchResult.receiptId}<br />
-                    Timestamp: {new Date(searchResult.timestamp).toLocaleString()}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
         {/* Active Elections */}
@@ -170,7 +188,7 @@ const VoterDashboard = () => {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.75rem' }}>
                         <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>{election.title}</h3>
                         <span className={voted ? 'badge-active' : 'badge-pending'}>
-                          {voted ? 'Voted' : 'Pending'}
+                          {voted ? 'Voted' : 'Live'}
                         </span>
                       </div>
                       <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', lineHeight: 1.6 }}>
@@ -178,7 +196,7 @@ const VoterDashboard = () => {
                       </p>
                     </div>
 
-                    <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '0.75rem', marginBottom: '1rem' }}>
+                    <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '0.75rem', marginBottom: '1.5rem' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                         <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Turnout</span>
                         <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>{Math.round((election.votedCount / election.totalVoters) * 100)}%</span>
@@ -236,7 +254,7 @@ const VoterDashboard = () => {
           <div className="card glass" style={{ padding: '4rem', textAlign: 'center' }}>
             <XCircle size={64} color="var(--text-secondary)" style={{ margin: '0 auto 1rem' }} />
             <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>No Active Elections</h3>
-            <p style={{ color: 'var(--text-secondary)' }}>Check back later for upcoming elections</p>
+            <p style={{ color: 'var(--text-secondary)' }}>Check back later for upcoming elections.</p>
           </div>
         )}
       </div>

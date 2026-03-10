@@ -16,6 +16,7 @@ export const DataProvider = ({ children }) => {
   const [candidates, setCandidates] = useState([]);
   const [votes, setVotes] = useState([]);
   const [pendingVoters, setPendingVoters] = useState([]);
+  const [auditLogs, setAuditLogs] = useState([]);
 
   // Load data from localStorage on mount
   useEffect(() => {
@@ -23,12 +24,28 @@ export const DataProvider = ({ children }) => {
     const loadedCandidates = JSON.parse(localStorage.getItem('vortex_candidates') || '[]');
     const loadedVotes = JSON.parse(localStorage.getItem('vortex_votes') || '[]');
     const loadedPending = JSON.parse(localStorage.getItem('vortex_pending_voters') || '[]');
+    const loadedAuditLogs = JSON.parse(localStorage.getItem('vortex_audit_logs') || '[]');
 
     setElections(loadedElections);
     setCandidates(loadedCandidates);
     setVotes(loadedVotes);
     setPendingVoters(loadedPending);
+    setAuditLogs(loadedAuditLogs);
   }, []);
+
+  const addAuditLog = (action, entityId, details, actor) => {
+    const newLog = {
+      id: generateId(),
+      timestamp: new Date().toISOString(),
+      action,
+      entityId,
+      details,
+      actor
+    };
+    const updated = [newLog, ...auditLogs]; // Add to beginning
+    setAuditLogs(updated);
+    localStorage.setItem('vortex_audit_logs', JSON.stringify(updated));
+  };
 
   // Elections
   const createElection = (electionData) => {
@@ -42,6 +59,7 @@ export const DataProvider = ({ children }) => {
     const updated = [...elections, newElection];
     setElections(updated);
     localStorage.setItem('vortex_elections', JSON.stringify(updated));
+    addAuditLog('ELECTION_CREATED', newElection.id, `Created election: ${electionData.title}`, 'Admin');
     return newElection;
   };
 
@@ -122,6 +140,8 @@ export const DataProvider = ({ children }) => {
     setElections(updatedElections);
     localStorage.setItem('vortex_elections', JSON.stringify(updatedElections));
 
+    addAuditLog('VOTE_CAST', electionId, `Vote successfully cast. Receipt: ${receiptId}`, 'System');
+
     return { success: true, vote: newVote };
   };
 
@@ -135,6 +155,10 @@ export const DataProvider = ({ children }) => {
 
   const hasUserVoted = (userId, electionId) => {
     return votes.some(v => v.userId === userId && v.electionId === electionId);
+  };
+
+  const getAllVotes = () => {
+    return votes;
   };
 
   // Pending Voters
@@ -155,6 +179,7 @@ export const DataProvider = ({ children }) => {
     candidates,
     votes,
     pendingVoters,
+    auditLogs,
     createElection,
     updateElection,
     deleteElection,
@@ -164,10 +189,12 @@ export const DataProvider = ({ children }) => {
     getCandidatesByElection,
     submitVote,
     getUserVotes,
+    getAllVotes,
     getVoteByReceipt,
     hasUserVoted,
     approveVoter,
-    rejectVoter
+    rejectVoter,
+    addAuditLog
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

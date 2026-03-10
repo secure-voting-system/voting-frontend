@@ -75,6 +75,3 @@ To customize the theme, edit the `:root` variables in `src/index.css`.
 
 Contributions are welcome! Please fork the repository and submit a pull request.
 
-## 📄 License
-
-This project is licensed under the MIT License.

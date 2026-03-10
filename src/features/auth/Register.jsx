@@ -34,6 +34,8 @@ const Register = () => {
       // Redirect based on role
       if (result.user.role === 'admin') {
         navigate('/admin/dashboard');
+      } else if (result.user.role === 'auditor') {
+        navigate('/auditor/dashboard');
       } else {
         navigate('/voter/dashboard');
       }
@@ -231,6 +233,31 @@ const Register = () => {
                   <div>
                     <div style={{ fontWeight: 700 }}>Admin</div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Manage elections</div>
+                  </div>
+                </div>
+              </label>
+              <label style={{ 
+                flex: 1, 
+                padding: '1rem', 
+                borderRadius: '0.75rem', 
+                border: formData.role === 'auditor' ? '2px solid var(--primary)' : '1px solid var(--glass-border)',
+                background: formData.role === 'auditor' ? 'rgba(99, 102, 241, 0.1)' : 'rgba(255,255,255,0.03)',
+                cursor: 'pointer',
+                transition: '0.3s'
+              }}>
+                <input
+                  type="radio"
+                  name="role"
+                  value="auditor"
+                  checked={formData.role === 'auditor'}
+                  onChange={handleChange}
+                  style={{ display: 'none' }}
+                />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  {formData.role === 'auditor' && <CheckCircle2 size={20} color="var(--primary)" />}
+                  <div>
+                    <div style={{ fontWeight: 700 }}>Auditor</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Verify integrity</div>
                   </div>
                 </div>
               </label>

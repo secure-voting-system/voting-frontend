@@ -4,28 +4,23 @@ import { useAuth } from '../../shared/context/AuthContext';
 import ThemeToggle from '../../shared/components/ThemeToggle';
 import { 
   LayoutDashboard, 
-  Settings, 
-  Users, 
-  UserCheck, 
-  Zap, 
-  LogOut,
-  Activity,
-  BarChart3,
-  Power
+  Search, 
+  ShieldCheck, 
+  History, 
+  Server, 
+  LogOut
 } from 'lucide-react';
 
-const AdminLayout = () => {
+const AuditorLayout = () => {
   const { logout } = useAuth();
   const navigate = useNavigate();
 
   const links = [
-    { title: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
-    { title: 'System Monitor', path: '/admin/monitor', icon: Activity },
-    { title: 'Manage Elections', path: '/admin/elections', icon: Settings },
-    { title: 'Candidate Roster', path: '/admin/candidates', icon: Users },
-    { title: 'Voter Approvals', path: '/admin/voters', icon: UserCheck },
-    { title: 'Election Control', path: '/admin/control', icon: Power },
-    { title: 'Live Results', path: '/results', icon: BarChart3 }
+    { title: 'Dashboard', path: '/auditor/dashboard', icon: LayoutDashboard },
+    { title: 'Vote Explorer', path: '/auditor/explorer', icon: Search },
+    { title: 'Receipt Verify', path: '/auditor/verify', icon: ShieldCheck },
+    { title: 'Audit Logs', path: '/auditor/logs', icon: History },
+    { title: 'Integrity', path: '/auditor/integrity', icon: Server },
   ];
 
   const handleLogout = () => {
@@ -35,22 +30,26 @@ const AdminLayout = () => {
 
   return (
     <div className="layout-root">
-      <aside className="nav-sidebar glass animate-fade-in">
+      <aside className="nav-sidebar glass animate-fade-in" style={{ borderRight: '1px solid rgba(236, 72, 153, 0.3)' }}>
         <div style={{ padding: '0 1rem', marginBottom: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800, letterSpacing: '-0.03em', background: 'linear-gradient(to right, var(--primary), var(--accent))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Secure Voting</h2>
-            <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.2em', fontWeight: 600 }}>Democratic Platform</span>
+            <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800, letterSpacing: '-0.03em', background: 'linear-gradient(to right, #ec4899, #8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Audit Trail</h2>
+            <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.2em', fontWeight: 600 }}>Integrity Node</span>
           </div>
           <ThemeToggle />
         </div>
 
-        
         <nav style={{ flex: 1 }}>
           {links.map((link) => (
             <NavLink
               key={link.path}
               to={link.path}
               className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`}
+              style={({ isActive }) => isActive ? {
+                background: 'linear-gradient(90deg, rgba(236, 72, 153, 0.15), transparent)',
+                color: '#ec4899',
+                borderLeftColor: '#ec4899'
+              } : {}}
             >
               <link.icon size={20} />
               <span style={{ fontWeight: 600 }}>{link.title}</span>
@@ -70,4 +69,4 @@ const AdminLayout = () => {
   );
 };
 
-export default AdminLayout;
+export default AuditorLayout;

@@ -16,6 +16,7 @@ export const DataProvider = ({ children }) => {
   const [candidates, setCandidates] = useState([]);
   const [votes, setVotes] = useState([]);
   const [pendingVoters, setPendingVoters] = useState([]);
+  const [auditLogs, setAuditLogs] = useState([]);
 
   const normalizeElection = (election) => {
     if (!election) return null;
@@ -53,7 +54,7 @@ export const DataProvider = ({ children }) => {
     };
   };
 
-  // Load data from API on mount
+  // Load data from API and localStorage on mount
   useEffect(() => {
     const loadInitial = async () => {
       try {
@@ -68,14 +69,37 @@ export const DataProvider = ({ children }) => {
         setElections(normalized);
       } catch (error) {
         console.error('Failed to load elections', error);
+        const loadedElections = JSON.parse(localStorage.getItem('vortex_elections') || '[]');
+        setElections(loadedElections);
       }
 
-      const storedVotes = JSON.parse(localStorage.getItem('vortex_votes') || '[]');
-      setVotes(storedVotes);
+      const loadedCandidates = JSON.parse(localStorage.getItem('vortex_candidates') || '[]');
+      const loadedVotes = JSON.parse(localStorage.getItem('vortex_votes') || '[]');
+      const loadedPending = JSON.parse(localStorage.getItem('vortex_pending_voters') || '[]');
+      const loadedAuditLogs = JSON.parse(localStorage.getItem('vortex_audit_logs') || '[]');
+
+      setCandidates(loadedCandidates);
+      setVotes(loadedVotes);
+      setPendingVoters(loadedPending);
+      setAuditLogs(loadedAuditLogs);
     };
 
     loadInitial();
   }, []);
+
+  const addAuditLog = (action, entityId, details, actor) => {
+    const newLog = {
+      id: generateId(),
+      timestamp: new Date().toISOString(),
+      action,
+      entityId,
+      details,
+      actor
+    };
+    const updated = [newLog, ...auditLogs]; // Add to beginning
+    setAuditLogs(updated);
+    localStorage.setItem('vortex_audit_logs', JSON.stringify(updated));
+  };
 
   // Elections
   const createElection = async (electionData) => {
@@ -86,10 +110,14 @@ export const DataProvider = ({ children }) => {
       startTime: electionData.startDate,
       endTime: electionData.endDate,
     };
-
     const created = await electionAPI.create(payload);
     const normalized = normalizeElection(created);
-    setElections((prev) => [...prev, normalized]);
+    setElections((prev) => {
+      const updated = [...prev, normalized];
+      localStorage.setItem('vortex_elections', JSON.stringify(updated));
+      return updated;
+    });
+    addAuditLog('ELECTION_CREATED', normalized.id, `Created election: ${normalized.title}`, 'Admin');
     return normalized;
   };
 
@@ -183,6 +211,7 @@ export const DataProvider = ({ children }) => {
       setElections((prev) => prev.map(e =>
         e.id === electionId ? { ...e, votedCount: (e.votedCount || 0) + 1 } : e
       ));
+      addAuditLog('VOTE_CAST', electionId, `Vote successfully cast. Receipt: ${receiptId}`, 'System');
 
       return { success: true, vote: newVote };
     } catch (error) {
@@ -211,6 +240,10 @@ export const DataProvider = ({ children }) => {
     return votes.some(v => v.userId === userId && v.electionId === electionId);
   };
 
+  const getAllVotes = () => {
+    return votes;
+  };
+
   // Pending Voters
   const approveVoter = (voterId) => {
     const updated = pendingVoters.filter(v => v.id !== voterId);
@@ -227,6 +260,7 @@ export const DataProvider = ({ children }) => {
     candidates,
     votes,
     pendingVoters,
+    auditLogs,
     createElection,
     updateElection,
     deleteElection,
@@ -237,10 +271,12 @@ export const DataProvider = ({ children }) => {
     loadCandidatesForElection,
     submitVote,
     getUserVotes,
+    getAllVotes,
     getVoteByReceipt,
     hasUserVoted,
     approveVoter,
-    rejectVoter
+    rejectVoter,
+    addAuditLog
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

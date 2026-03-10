@@ -71,7 +71,8 @@ export const AuthProvider = ({ children }) => {
     logout,
     isAuthenticated: !!user,
     isAdmin: String(user?.role || '').toLowerCase() === 'admin' || String(user?.role || '').toUpperCase() === 'ADMIN',
-    isVoter: String(user?.role || '').toLowerCase() === 'voter' || String(user?.role || '').toUpperCase() === 'VOTER'
+    isVoter: String(user?.role || '').toLowerCase() === 'voter' || String(user?.role || '').toUpperCase() === 'VOTER',
+    isAuditor: String(user?.role || '').toLowerCase() === 'auditor' || String(user?.role || '').toUpperCase() === 'AUDITOR'
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

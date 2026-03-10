@@ -74,14 +74,15 @@
 }
 
 .hero-title {
-  font-size: 4rem;
+  font-size: 5rem;
   font-weight: 900;
   line-height: 1.1;
   margin-bottom: 1.5rem;
-  background: linear-gradient(135deg, var(--primary), white, var(--accent));
+  background: linear-gradient(to right, var(--primary), white, var(--accent));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 20px rgba(6, 182, 212, 0.3));
 }
 
 .hero-description {
@@ -128,8 +129,15 @@
 }
 
 .feature-card {
-  padding: 2rem;
+  padding: 2.5rem 2rem;
   text-align: center;
+  transition: 0.4s;
+}
+
+.feature-card:hover {
+  transform: translateY(-10px);
+  border-color: var(--primary);
+  box-shadow: 0 10px 40px rgba(6, 182, 212, 0.2);
 }
 
 .feature-icon-wrapper {
@@ -164,7 +172,36 @@
 .cta-card {
   max-width: 800px;
   margin: 0 auto;
-  padding: 4rem 3rem;
+  padding: 5rem 3rem;
+  background: radial-gradient(circle at center, rgba(139, 92, 246, 0.15) 0%, rgba(0,0,0,0.8) 100%);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.step-card {
+  padding: 2.5rem 2rem;
+  text-align: left;
+  border-top: 2px solid rgba(255,255,255,0.1);
+}
+
+.step-card:hover {
+  border-top-color: var(--primary);
+}
+
+.step-number {
+  font-size: 3.5rem;
+  font-weight: 900;
+  color: rgba(255,255,255,0.05);
+  position: absolute;
+  top: 1rem;
+  right: 1.5rem;
+  transition: 0.4s;
+}
+
+.step-card:hover .step-number {
+  color: rgba(6, 182, 212, 0.15);
+  transform: scale(1.1);
 }
 
 .cta-title {

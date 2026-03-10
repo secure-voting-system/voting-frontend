@@ -21,6 +21,18 @@ import ElectionManagement from './features/admin/ElectionManagement';
 import CandidateManagement from './features/admin/CandidateManagement';
 import VoterApproval from './features/admin/VoterApproval';
 import ElectionControl from './features/admin/ElectionControl';
+import SystemMonitor from './features/admin/SystemMonitor';
+
+// Auditor Pages
+import AuditorLayout from './features/auditor/AuditorLayout';
+import AuditorDashboard from './features/auditor/AuditorDashboard';
+import VoteExplorer from './features/auditor/VoteExplorer';
+import ReceiptVerification from './features/auditor/ReceiptVerification';
+import AuditLogs from './features/auditor/AuditLogs';
+import IntegrityCheck from './features/auditor/IntegrityCheck';
+
+// Results
+import ResultsDashboard from './features/results/ResultsDashboard';
 
 function App() {
   return (
@@ -52,57 +64,39 @@ function App() {
               }
             />
 
+            {/* Shared Routes (Authenticated users) */}
+            <Route path="/results" element={
+              <ProtectedRoute>
+                <ResultsDashboard />
+              </ProtectedRoute>
+            } />
+
+            {/* Auditor Routes */}
+            <Route path="/auditor" element={
+              <ProtectedRoute requireAuditor>
+                <AuditorLayout />
+              </ProtectedRoute>
+            }>
+              <Route path="dashboard" element={<AuditorDashboard />} />
+              <Route path="explorer" element={<VoteExplorer />} />
+              <Route path="verify" element={<ReceiptVerification />} />
+              <Route path="logs" element={<AuditLogs />} />
+              <Route path="integrity" element={<IntegrityCheck />} />
+            </Route>
+
             {/* Admin Routes */}
-            <Route
-              path="/admin/dashboard"
-              element={
-                <ProtectedRoute requireAdmin>
-                  <AdminLayout>
-                    <Dashboard />
-                  </AdminLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/elections"
-              element={
-                <ProtectedRoute requireAdmin>
-                  <AdminLayout>
-                    <ElectionManagement />
-                  </AdminLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/candidates"
-              element={
-                <ProtectedRoute requireAdmin>
-                  <AdminLayout>
-                    <CandidateManagement />
-                  </AdminLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/voters"
-              element={
-                <ProtectedRoute requireAdmin>
-                  <AdminLayout>
-                    <VoterApproval />
-                  </AdminLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/control"
-              element={
-                <ProtectedRoute requireAdmin>
-                  <AdminLayout>
-                    <ElectionControl />
-                  </AdminLayout>
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/admin" element={
+              <ProtectedRoute requireAdmin>
+                <AdminLayout />
+              </ProtectedRoute>
+            }>
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="monitor" element={<SystemMonitor />} />
+              <Route path="elections" element={<ElectionManagement />} />
+              <Route path="candidates" element={<CandidateManagement />} />
+              <Route path="voters" element={<VoterApproval />} />
+              <Route path="control" element={<ElectionControl />} />
+            </Route>
 
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />

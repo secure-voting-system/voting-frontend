@@ -25,6 +25,11 @@ const VotingPage = () => {
   const candidates = getCandidatesByElection(electionId);
   const alreadyVoted = hasUserVoted(user.id, electionId);
 
+  console.log(`VotingPage Render: electionId=${electionId}, found ${candidates.length} candidates`);
+  if (candidates.length > 0) {
+    console.log('Candidates list:', candidates);
+  }
+
   if (!election) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

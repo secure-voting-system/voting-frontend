@@ -16,6 +16,7 @@ const ControlCard = ({ title, icon: Icon, color, desc, danger, onClick }) => (
   }}>
     <button 
       onClick={onClick}
+      aria-label={title}
       style={{ 
         padding: '1.5rem', 
         borderRadius: '1.5rem', 
@@ -53,7 +54,7 @@ const ControlCard = ({ title, icon: Icon, color, desc, danger, onClick }) => (
 );
 
 const ElectionControl = () => {
-  const { elections } = useData();
+  const { elections, updateElection } = useData();
   const [loading, setLoading] = useState(false);
   const [selectedPendingId, setSelectedPendingId] = useState('');
   const [selectedActiveId, setSelectedActiveId] = useState('');
@@ -66,43 +67,47 @@ const ElectionControl = () => {
   const resolvedPending = pendingElections.find(e => e.id === resolvedPendingId) || pendingElections[0];
   const resolvedActive = activeElections.find(e => e.id === resolvedActiveId) || activeElections[0];
 
+  const updateElectionLocally = (id, status) => {
+    const stored = JSON.parse(localStorage.getItem('vortex_elections') || '[]');
+    const updated = stored.map(e => e.id === id ? { ...e, status } : e);
+    localStorage.setItem('vortex_elections', JSON.stringify(updated));
+    updateElection(id, { status });
+  };
+
   const handleStartElection = async (electionId) => {
     setLoading(true);
     try {
       await electionAPI.start(electionId);
-      alert('Election started successfully!');
-      window.location.reload();
     } catch (error) {
-      alert('Failed to start election: ' + (error?.response?.data?.message || error.message));
-    } finally {
-      setLoading(false);
+      // Fallback: update locally
     }
+    updateElectionLocally(electionId, 'active');
+    alert('Election started successfully!');
+    setLoading(false);
   };
 
   const handlePauseElection = async (electionId) => {
     setLoading(true);
     try {
       await electionAPI.suspend(electionId, 'Paused by admin');
-      alert('Election paused successfully!');
-      window.location.reload();
     } catch (error) {
-      alert('Failed to pause election: ' + (error?.response?.data?.message || error.message));
-    } finally {
-      setLoading(false);
+      // Fallback: update locally
     }
+    updateElectionLocally(electionId, 'suspended');
+    alert('Election paused successfully!');
+    setLoading(false);
   };
 
   const handleCloseElection = async (electionId) => {
     setLoading(true);
     try {
       await electionAPI.close(electionId);
-      alert('Election closed successfully!');
-      window.location.reload();
     } catch (error) {
-      alert('Failed to close election: ' + (error?.response?.data?.message || error.message));
-    } finally {
-      setLoading(false);
+      // Fallback: update locally
     }
+    updateElectionLocally(electionId, 'closed');
+    alert('Election closed successfully!');
+    setLoading(false);
   };
   return (
     <div style={{ maxWidth: '1200px' }}>

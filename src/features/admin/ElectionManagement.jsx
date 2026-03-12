@@ -3,8 +3,9 @@ import { useData } from '../../shared/context/DataContext';
 import { Plus, Calendar, Clock, Edit3, Trash2, Search, X } from 'lucide-react';
 
 const ElectionManagement = () => {
-  const { elections, createElection, deleteElection } = useData();
+  const { elections, createElection, deleteElection, updateElection } = useData();
   const [showModal, setShowModal] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     title: '',
@@ -18,19 +19,41 @@ const ElectionManagement = () => {
     e.preventDefault();
     setError('');
     try {
-      await createElection(formData);
-      setShowModal(false);
-      setFormData({
-        title: '',
-        description: '',
-        startDate: '',
-        endDate: '',
-        totalVoters: 100
-      });
+      if (editingId) {
+        await updateElection(editingId, formData);
+      } else {
+        await createElection(formData);
+      }
+      handleCloseModal();
     } catch (error) {
-      const message = error?.response?.data?.message || error?.message || 'Failed to create election';
+      const message = error?.response?.data?.message || error?.message || `Failed to ${editingId ? 'update' : 'create'} election`;
       setError(message);
     }
+  };
+
+  const handleEdit = (election) => {
+    setEditingId(election.id);
+    setFormData({
+      title: election.title,
+      description: election.description,
+      startDate: election.startDate,
+      endDate: election.endDate,
+      totalVoters: election.totalVoters
+    });
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setEditingId(null);
+    setError('');
+    setFormData({
+      title: '',
+      description: '',
+      startDate: '',
+      endDate: '',
+      totalVoters: 100
+    });
   };
 
   const handleChange = (e) => {
@@ -125,8 +148,10 @@ const ElectionManagement = () => {
                   <td style={{ textAlign: 'right' }}>
                     <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                       <button 
+                        onClick={() => handleEdit(election)}
                         className="sidebar-item" 
                         style={{ margin: 0, padding: '0.5rem' }}
+                        aria-label="Edit Election"
                       >
                         <Edit3 size={16} />
                       </button>
@@ -175,7 +200,7 @@ const ElectionManagement = () => {
         }}>
           <div className="card glass animate-fade-in" style={{ maxWidth: '600px', width: '100%', padding: '2.5rem', position: 'relative' }}>
             <button
-              onClick={() => setShowModal(false)}
+              onClick={handleCloseModal}
               style={{
                 position: 'absolute',
                 top: '1.5rem',
@@ -191,7 +216,7 @@ const ElectionManagement = () => {
               <X size={20} />
             </button>
 
-            <h2 style={{ marginBottom: '2rem' }}>Create New Election</h2>
+            <h2 style={{ marginBottom: '2rem' }}>{editingId ? 'Edit Election Protocol' : 'Create New Election'}</h2>
 
             {error && (
               <div style={{ 
@@ -326,7 +351,7 @@ const ElectionManagement = () => {
               <div style={{ display: 'flex', gap: '1rem' }}>
                 <button
                   type="button"
-                  onClick={() => setShowModal(false)}
+                  onClick={handleCloseModal}
                   className="sidebar-item"
                   style={{ flex: 1, margin: 0, padding: '1rem', justifyContent: 'center' }}
                 >
@@ -337,7 +362,8 @@ const ElectionManagement = () => {
                   className="btn-premium"
                   style={{ flex: 1, justifyContent: 'center' }}
                 >
-                  <Plus size={20} /> Create Election
+                  {editingId ? <Edit3 size={20} /> : <Plus size={20} />}
+                  {editingId ? ' Save Changes' : ' Create Election'}
                 </button>
               </div>
             </form>
